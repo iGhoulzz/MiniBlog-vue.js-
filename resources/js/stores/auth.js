@@ -1,6 +1,6 @@
 import { defineStore } from 'pinia';
 import { ref, computed } from 'vue';
-import { useNotificationStore } from './stores/notification';
+import { useNotificationStore } from './notification';
 
 export const useAuthStore = defineStore('auth', () => {
     // --- 1. STATE ---
@@ -22,9 +22,10 @@ export const useAuthStore = defineStore('auth', () => {
     }
 
     /**
-     * Clears the user's session data and redirects to the login page.
+     * Clears the user's session data from the store and localStorage.
+     * Routing should be handled by the component calling this function.
      */
-    function logout(router) {
+    function logout() {
         const message = 'You have been logged out.';
 
         user.value = null;
@@ -32,13 +33,7 @@ export const useAuthStore = defineStore('auth', () => {
         localStorage.removeItem('token');
         localStorage.removeItem('user');
 
-        if (router) {
-            router.push('/auth/login').then(() => {
-                notificationStore.showNotification({ message });
-            });
-        } else {
-            notificationStore.showNotification({ message });
-        }
+        notificationStore.showNotification({ message });
     }
 
     const isAuthenticated = computed(() => !!token.value);

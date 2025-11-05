@@ -68,7 +68,7 @@
 import { ref, onMounted } from 'vue';
 import { useRoute } from 'vue-router';
 import api from '../services/api.js';
-import CommentItem from '../components/comments/CommentItem.vue';
+import CommentItem from '../components/Comments/CommentItem.vue';
 
 const route = useRoute();
 const post = ref(null);

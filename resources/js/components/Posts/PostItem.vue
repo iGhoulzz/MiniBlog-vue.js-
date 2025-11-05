@@ -77,9 +77,9 @@
 <script setup>
 import { ref } from 'vue';
 import { useRouter } from 'vue-router';
-import { useAuthStore } from '../../store';
+import { useAuthStore } from '../../stores/auth';
 import api from '../../services/api';
-import CommentItem from '../comments/CommentItem.vue';
+import CommentItem from '../Comments/CommentItem.vue';
 
 const props = defineProps({
   post: {

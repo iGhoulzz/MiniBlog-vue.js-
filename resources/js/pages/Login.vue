@@ -63,7 +63,7 @@
 <script setup>
 import { reactive, ref } from 'vue';
 import { useRouter } from 'vue-router';
-import { useAuthStore } from '../store.js'; // Import the Pinia store function
+import { useAuthStore } from '../stores/auth.js'; // Import the Pinia store function
 import api from '../services/api.js'; // Import the api service
 
 // --- 1. STATE ---

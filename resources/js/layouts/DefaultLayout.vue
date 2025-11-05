@@ -33,7 +33,7 @@
 
 <script setup>
 import { useRouter } from 'vue-router';
-import { useAuthStore } from '../store.js'; // Import the Pinia store function
+import { useAuthStore } from '../stores/auth.js'; // Import the Pinia store function
 import api from '../services/api.js'; // Assuming you have the api service
 
 const router = useRouter();
@@ -47,8 +47,10 @@ const handleLogout = async () => {
   } catch (error) {
     console.error('Logout failed on server, but logging out locally.', error);
   }
-  // Clear user data from the store and redirect
-  authStore.logout(router);
+  // Clear user data from the store
+  authStore.logout();
+  // Handle routing in the component
+  router.push('/auth/login');
 };
 </script>
 
