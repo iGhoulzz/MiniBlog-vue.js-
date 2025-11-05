@@ -75,7 +75,9 @@ const updateProfile = async () => {
             },
         });
         // Update the user in the auth store with the new data
-        authStore.setUser(authStore.token, response.data.user);
+        // Handle both response.data.user and response.data formats
+        const updatedUser = response.data.user || response.data;
+        authStore.setUser(authStore.token, updatedUser);
         // After successful update, redirect to the user's profile page.
         router.push({ name: 'UserProfile', params: { id: authStore.user.id } });
     } catch (error) {
