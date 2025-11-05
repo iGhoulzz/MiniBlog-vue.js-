@@ -1,5 +1,5 @@
 import axios from 'axios';
-import { useAuthStore } from '../store';
+import { useAuthStore } from '../stores/auth';
 
 const api = axios.create({
     baseURL: 'http://miniblog.test/api',

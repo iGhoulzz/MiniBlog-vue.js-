@@ -49,7 +49,7 @@
 <script setup>
 import { ref, onMounted } from 'vue';
 import { useRouter } from 'vue-router';
-import { useAuthStore } from '../store.js';
+import { useAuthStore } from '../stores/auth.js';
 import { useNotificationStore } from '../stores/notification';
 import api from '../services/api.js';
 import PostItem from '../components/Posts/PostItem.vue';

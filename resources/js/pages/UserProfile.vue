@@ -47,28 +47,22 @@
 <script setup>
 import { ref, onMounted, watch, computed } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
-import { useStore } from 'vuex';
+import { useAuthStore } from '../stores/auth.js';
 import api from '../services/api.js';
-import PostItem from '../components/posts/PostItem.vue';
+import PostItem from '../components/Posts/PostItem.vue';
 import { useNotificationStore } from '../stores/notification';
 
 const route = useRoute();
 const router = useRouter();
-const store = useStore();
+const authStore = useAuthStore();
 const user = ref(null);
 const posts = ref([]);
 const error = ref('');
 const notificationStore = useNotificationStore();
 
-const loggedInUser = computed(() => store.state.user);
-
-const canEdit = computed(() => {
-    return loggedInUser.value && user.value && loggedInUser.value.id === user.value.id;
+const isCurrentUser = computed(() => {
+    return authStore.user && user.value && authStore.user.id === user.value.id;
 });
-
-const goToEditProfile = () => {
-    router.push({ name: 'EditProfile' });
-};
 
 const fetchUserProfile = async () => {
   try {

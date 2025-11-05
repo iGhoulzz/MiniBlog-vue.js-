@@ -34,7 +34,7 @@
 
 <script setup>
 import { ref } from 'vue';
-import { useAuthStore } from '../../store';
+import { useAuthStore } from '../../stores/auth';
 import EditCommentForm from './EditCommentForm.vue';
 
 const authStore = useAuthStore();
