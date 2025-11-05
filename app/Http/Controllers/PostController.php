@@ -11,13 +11,13 @@ class PostController extends Controller
     use AuthorizesRequests;
     public function index()
     {
-        $posts = Post::with('user')->get();
-        // $posts = Post::query()->get();
+        $posts = Post::with('user')->withCount('comments')->latest()->get();
+        // $posts = Post::query()->get(); (old version i then changed it to eager load user relationship)
 
-        return view('posts.index', compact('posts'));
+        return response()->json($posts);
     }
 
-    public function store(Request $request)
+    public function apiPost(Request $request)
     {
         $attributes = $request->validate([
 
@@ -28,32 +28,36 @@ class PostController extends Controller
 
         Post::create($attributes);
 
-        return redirect('/')->with('success', 'Post created successfully.');
+        return response()->json([
+            'message' => 'Post created successfully.'
+        ], 201);
     }
 
     ///
 
-    public function destroy(Post $post)
+    public function apiPostDelete(Post $post)
     {
         $this->authorize('delete', $post);
         $post->delete();
-        return redirect('/')->with('success', 'Post deleted successfully.');
+        return response()->json([
+            'message' => 'Post deleted successfully.'
+        ], 200);
     }
 
     ///
 
-    public function show(Post $post)
+    public function apiPostShow(Post $post)
     {
-        $post->load('comments.user');
-        return view('posts.show', compact('post'));
+        $post->load('user', 'comments.user');
+        return response()->json($post);
     }
 
-    public function edit(Post $post)
+    public function apiPostEdit(Post $post)
     {
         $this->authorize('update', $post);
-        return view('posts.edit', compact('post'));
+        return response()->json($post);
     }
-    public function update(Request $request, Post $post)
+    public function apiPostUpdate(Request $request, Post $post)
     {
         $this->authorize('update', $post);
 
@@ -63,6 +67,8 @@ class PostController extends Controller
 
         $post->update($attributes);
 
-        return redirect('/')->with('success', 'Post updated successfully.');
+        return response()->json([
+            'message' => 'Post updated successfully.'
+        ], 200);
     }
 }

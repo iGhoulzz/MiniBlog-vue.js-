@@ -8,6 +8,8 @@ use App\Policies\PostPolicy;
 use App\Models\Comment;
 use Illuminate\Foundation\Support\Providers\AuthServiceProvider as ServiceProvider;
 use App\Policies\CommentPolicy;
+use App\Models\User;
+use App\Policies\UserPolicy;
 
 class AuthServiceProvider extends ServiceProvider
 {
@@ -19,6 +21,7 @@ class AuthServiceProvider extends ServiceProvider
     protected $policies = [
         Post::class => PostPolicy::class,
         Comment::class => CommentPolicy::class,
+        User::class => UserPolicy::class,
     ];
 
     /**

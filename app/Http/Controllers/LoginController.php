@@ -7,29 +7,38 @@ use Illuminate\Support\Facades\Auth;
 
 class LoginController extends Controller
 {
-    public function create()
-    {
-        return view('login');
-    }
 
-    public function store(Request $request)
+    public function apiLogin(Request $request)
     {
-        $attributes = $request->validate([
+        $credentials = $request->validate([
             'email' => 'required|email',
-            'password' => 'required',
+            'password' => 'required|string|min:6',
         ]);
 
-        if (Auth::attempt($attributes)) {
-            return redirect('/')->with('success', 'Login successful.');
-        } else {
-            return back()->withErrors(['email' => 'Invalid credentials'])->onlyInput('email');
+        if (Auth::attempt($credentials)) {
+            $user = Auth::user();
+            $token = $user->createToken('api-token')->plainTextToken;
+
+            return response()->json([
+                'message' => 'Login successful',
+                'token' => $token,
+                'user' => $user,
+            ], 200);
         }
+
+        else return response()->json([
+            'message' => 'Invalid credentials'
+        ], 401);
     }
 
-    public function destroy()
+    public function apiLogout(Request $request)
     {
-        Auth::logout();
+        $request->user()->currentAccessToken()->delete();
 
-        return redirect('/login')->with('success', 'Logged out successfully.');
+        return response()->json([
+            'message' => 'Logout successful'
+        ], 200);
     }
+
+
 }

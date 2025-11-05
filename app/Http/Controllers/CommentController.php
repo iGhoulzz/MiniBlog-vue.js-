@@ -11,7 +11,7 @@ class CommentController extends Controller
 {
     use AuthorizesRequests;
 
-    public function store(Request $request, Post $post)
+    public function apiComment(Request $request, Post $post)
     {
         $attributes = $request->validate([
             'content' => 'required|min:2|max:150',
@@ -21,28 +21,32 @@ class CommentController extends Controller
         $attributes['post_id'] = $post->id;
 
         Comment::create($attributes);
-        return redirect('/posts/'.$post->id)->with('success', 'Comment added successfully.');
+        return response()->json([
+            'message' => 'Comment added successfully.'
+        ], 201);
 
     }
 
     ///
 
-    public function destroy(Comment $comment)
+    public function apiCommentDelete(Comment $comment)
     {
         $this->authorize('delete', $comment);
         $comment->delete();
-        return redirect('/posts/'.$comment->post->id)->with('success', 'Comment deleted successfully.');
+        return response()->json([
+            'message' => 'Comment deleted successfully.'
+        ], 200);
     }
 
    ///
 
-    public function edit(Comment $comment)
+    public function apiCommentEdit(Comment $comment)
     {
         $this->authorize('update', $comment);
-        return view('comments.edit', compact('comment'));
+        return response()->json($comment);
     }
 
-    public function update(Request $request, Comment $comment)
+    public function apiCommentUpdate(Request $request, Comment $comment)
     {
         $this->authorize('update', $comment);
 
@@ -52,6 +56,8 @@ class CommentController extends Controller
 
         $comment->update($attributes);
 
-        return redirect('/posts/'.$comment->post->id)->with('success', 'Comment updated successfully.');
+        return response()->json([
+            'message' => 'Comment updated successfully.'
+        ], 200);
     }
 }
