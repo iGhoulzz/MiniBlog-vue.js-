@@ -110,7 +110,7 @@ const handleCreateComment = async () => {
   } catch (error) {
     if (error.response && error.response.data.errors) {
       notificationStore.showNotification({
-        message: error.response.data.errors.content[0],
+        message: error.response.data.errors.content?.[0] || 'An error occurred while posting the comment.',
         type: 'error'
       });
     } else {
