@@ -117,13 +117,13 @@ const updateProfile = async () => {
         // Handle both response.data.user and response.data formats
         const updatedUser = response.data.user || response.data;
         authStore.setUser(authStore.token, updatedUser);
-        
+
         // Show success notification
         notificationStore.showNotification({
             message: 'Profile updated successfully!',
             type: 'success'
         });
-        
+
         // After successful update, redirect to the user's profile page.
         router.push({ name: 'UserProfile', params: { id: authStore.user.id } });
     } catch (error) {
