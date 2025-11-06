@@ -132,7 +132,7 @@ const handleRegister = async () => {
     if (error.response && error.response.status === 422) {
       // Laravel sends a JSON object of all validation errors.
       const errors = error.response.data.errors;
-      const errorMessages = Object.values(errors).flat().join(' ');
+      const errorMessages = Object.values(errors).flat().join('. ');
       notificationStore.showNotification({
         message: errorMessages,
         type: 'error'
