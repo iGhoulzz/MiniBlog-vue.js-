@@ -28,6 +28,8 @@
         </Transition>
       </router-view>
     </main>
+
+    <Notification />
   </div>
 </template>
 
@@ -35,6 +37,7 @@
 import { useRouter } from 'vue-router';
 import { useAuthStore } from '../stores/auth.js'; // Import the Pinia store function
 import api from '../services/api.js'; // Assuming you have the api service
+import Notification from '../components/Notification.vue';
 
 const router = useRouter();
 const authStore = useAuthStore(); // Get the store instance

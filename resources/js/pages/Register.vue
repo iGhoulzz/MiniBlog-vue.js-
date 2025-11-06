@@ -6,13 +6,6 @@
         Create Your Account
       </h1>
 
-      <div v-if="errors" class="p-3 text-sm text-red-700 bg-red-100 rounded-lg">
-        <ul class="list-disc list-inside">
-          <li v-for="(errorMessages, field) in errors" :key="field">
-            {{ errorMessages[0] }} </li>
-        </ul>
-      </div>
-
       <form @submit.prevent="handleRegister" class="space-y-6">
 
         <div>
@@ -92,8 +85,9 @@
 </template>
 
 <script setup>
-import { reactive, ref } from 'vue';
+import { reactive } from 'vue';
 import { useRouter } from 'vue-router';
+import { useNotificationStore } from '../stores/notification.js';
 import api from '../services/api.js';
 
 // --- 1. STATE ---
@@ -106,19 +100,14 @@ const form = reactive({
   password_confirmation: '' // Must match the backend validation rule
 });
 
-// This will hold backend validation errors.
-const errors = ref(null);
-
 // This gives us access to the Vue router instance.
 const router = useRouter();
+const notificationStore = useNotificationStore();
 
 
 // --- 2. BEHAVIOR ---
 // This is the function that runs when the form is submitted.
 const handleRegister = async () => {
-  // Clear any old errors
-  errors.value = null;
-
   try {
     // --- 3. BACKEND CONNECTION (Step A) ---
     // Just like login, we must get the Sanctum CSRF cookie first.
@@ -130,18 +119,30 @@ const handleRegister = async () => {
 
     // --- 5. SUCCESS ---
     // If registration is successful, the backend sends a 201 response.
-    // We'll redirect the user to the login page.
-    router.push('/login');
+    // Show success notification and redirect the user to the login page.
+    notificationStore.showNotification({
+      message: 'Registration successful! Please log in.',
+      type: 'success'
+    });
+    router.push('/auth/login');
 
   } catch (error) {
     // --- 6. FAILURE ---
     // If the backend returns a 422 (Validation Error)
     if (error.response && error.response.status === 422) {
       // Laravel sends a JSON object of all validation errors.
-      // We save it so our v-if can display them.
-      errors.value = error.response.data.errors;
+      const errors = error.response.data.errors;
+      const errorMessages = Object.values(errors).flat().join(' ');
+      notificationStore.showNotification({
+        message: errorMessages,
+        type: 'error'
+      });
     } else {
       // Handle other unexpected errors
+      notificationStore.showNotification({
+        message: 'An unexpected error occurred. Please try again.',
+        type: 'error'
+      });
       console.error(error);
     }
   }

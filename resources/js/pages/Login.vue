@@ -6,10 +6,6 @@
         Login to MiniBlog+
       </h1>
 
-      <div v-if="errorMessage" class="p-3 text-sm text-red-700 bg-red-100 rounded-lg">
-        {{ errorMessage }}
-      </div>
-
       <form @submit.prevent="handleLogin" class="space-y-6">
 
         <div>
@@ -61,9 +57,10 @@
 </template>
 
 <script setup>
-import { reactive, ref } from 'vue';
+import { reactive } from 'vue';
 import { useRouter } from 'vue-router';
 import { useAuthStore } from '../stores/auth.js'; // Import the Pinia store function
+import { useNotificationStore } from '../stores/notification.js';
 import api from '../services/api.js'; // Import the api service
 
 // --- 1. STATE ---
@@ -74,25 +71,26 @@ const form = reactive({
   password: ''
 });
 
-// This will hold any error messages from the backend.
-const errorMessage = ref('');
-
 // This gives us access to the Vue router instance.
 const router = useRouter();
 const authStore = useAuthStore(); // Get the store instance
+const notificationStore = useNotificationStore();
 
 
 // --- 2. BEHAVIOR ---
 // This is the function that runs when the form is submitted.
 const handleLogin = async () => {
-  // Clear any old errors
-  errorMessage.value = '';
-
   try {
         const response = await api.post('/login', form);
 
     // Use the store action to set the user
     authStore.setUser(response.data.token, response.data.user);
+
+    // Show success notification
+    notificationStore.showNotification({
+      message: 'Login successful!',
+      type: 'success'
+    });
 
     // Redirect to the home page
     router.push('/');
@@ -102,9 +100,15 @@ const handleLogin = async () => {
     // If the backend returns an error (like 401 Invalid Credentials)
     // we catch it here and show the error message.
     if (error.response && error.response.status === 401) {
-      errorMessage.value = error.response.data.message;
+      notificationStore.showNotification({
+        message: error.response.data.message,
+        type: 'error'
+      });
     } else {
-      errorMessage.value = 'An unexpected error occurred. Please try again.';
+      notificationStore.showNotification({
+        message: 'An unexpected error occurred. Please try again.',
+        type: 'error'
+      });
       console.error(error); // Log the full error for debugging
     }
   }
