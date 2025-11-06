@@ -43,10 +43,12 @@
 import { ref, onMounted } from 'vue';
 import { useRouter } from 'vue-router';
 import { useAuthStore } from '../stores/auth.js';
+import { useNotificationStore } from '../stores/notification.js';
 import api from '../services/api';
 
 const router = useRouter();
 const authStore = useAuthStore();
+const notificationStore = useNotificationStore();
 const name = ref('');
 const avatarFile = ref(null);
 const avatarPreview = ref(null);
@@ -115,9 +117,20 @@ const updateProfile = async () => {
         // Handle both response.data.user and response.data formats
         const updatedUser = response.data.user || response.data;
         authStore.setUser(authStore.token, updatedUser);
+
+        // Show success notification
+        notificationStore.showNotification({
+            message: 'Profile updated successfully!',
+            type: 'success'
+        });
+
         // After successful update, redirect to the user's profile page.
         router.push({ name: 'UserProfile', params: { id: authStore.user.id } });
     } catch (error) {
+        notificationStore.showNotification({
+            message: 'Error updating profile. Please try again.',
+            type: 'error'
+        });
         console.error('Error updating profile:', error);
     }
 };

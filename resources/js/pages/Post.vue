@@ -20,9 +20,6 @@
       <!-- Create Comment Form -->
       <div class="mt-6 border-t pt-6">
         <h3 class="text-lg font-semibold mb-4">Leave a Comment</h3>
-        <div v-if="commentError" class="p-3 mb-4 text-sm text-red-700 bg-red-100 rounded-lg">
-          {{ commentError }}
-        </div>
         <form @submit.prevent="handleCreateComment">
           <textarea
             v-model="newCommentContent"
@@ -67,13 +64,14 @@
 <script setup>
 import { ref, onMounted } from 'vue';
 import { useRoute } from 'vue-router';
+import { useNotificationStore } from '../stores/notification.js';
 import api from '../services/api.js';
 import CommentItem from '../components/Comments/CommentItem.vue';
 
 const route = useRoute();
+const notificationStore = useNotificationStore();
 const post = ref(null);
 const newCommentContent = ref('');
-const commentError = ref('');
 
 const fetchPost = async () => {
   try {
@@ -81,14 +79,20 @@ const fetchPost = async () => {
     const response = await api.get(`/posts/${postId}`);
     post.value = response.data;
   } catch (error) {
+    notificationStore.showNotification({
+      message: 'Error loading post. Please try again.',
+      type: 'error'
+    });
     console.error('Error fetching post:', error);
   }
 };
 
 const handleCreateComment = async () => {
-  commentError.value = '';
   if (newCommentContent.value.trim() === '') {
-    commentError.value = 'Comment cannot be empty.';
+    notificationStore.showNotification({
+      message: 'Comment cannot be empty.',
+      type: 'error'
+    });
     return;
   }
 
@@ -98,12 +102,22 @@ const handleCreateComment = async () => {
       content: newCommentContent.value,
     });
     newCommentContent.value = '';
+    notificationStore.showNotification({
+      message: 'Comment posted successfully!',
+      type: 'success'
+    });
     await fetchPost(); // Refetch post to show the new comment
   } catch (error) {
     if (error.response && error.response.data.errors) {
-      commentError.value = error.response.data.errors.content[0];
+      notificationStore.showNotification({
+        message: error.response.data.errors.content?.[0] || 'An error occurred while posting the comment.',
+        type: 'error'
+      });
     } else {
-      commentError.value = 'An error occurred while posting the comment.';
+      notificationStore.showNotification({
+        message: 'An error occurred while posting the comment.',
+        type: 'error'
+      });
       console.error(error);
     }
   }
@@ -116,8 +130,16 @@ const handleDeleteComment = async (commentId) => {
 
   try {
     await api.delete(`/comments/${commentId}`);
+    notificationStore.showNotification({
+      message: 'Comment deleted successfully!',
+      type: 'success'
+    });
     await fetchPost(); // Refetch post to remove the deleted comment
   } catch (error) {
+    notificationStore.showNotification({
+      message: 'Error deleting comment. Please try again.',
+      type: 'error'
+    });
     console.error('Error deleting comment:', error);
   }
 };
@@ -127,10 +149,17 @@ const handleUpdateComment = async (commentData) => {
     await api.patch(`/comments/${commentData.id}`, {
       content: commentData.content,
     });
+    notificationStore.showNotification({
+      message: 'Comment updated successfully!',
+      type: 'success'
+    });
     await fetchPost(); // Refetch post to show the updated comment
   } catch (error) {
+    notificationStore.showNotification({
+      message: 'Error updating comment. Please try again.',
+      type: 'error'
+    });
     console.error('Error updating comment:', error);
-    // Optionally, set an error message to display to the user
   }
 };
 
