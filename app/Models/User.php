@@ -39,6 +39,8 @@ class User extends Authenticatable
         'remember_token',
     ];
 
+protected $appends = ['avatar_url'];
+
     /**
      * Get the attributes that should be cast.
      *
@@ -58,8 +60,10 @@ class User extends Authenticatable
      * @param  string|null  $value
      * @return string|null
      */
-    public function getAvatarAttribute($value)
+    public function getAvatarUrlAttribute($value)
     {
         return $value ? Storage::url($value) : null;
     }
+
+
 }

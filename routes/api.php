@@ -27,6 +27,7 @@ Route::middleware('auth:sanctum')->group(function () {
 
     Route::get('/users/{user}', [UserController::class, 'apiShowUser']);
     Route::patch('/users/{user}', [UserController::class, 'apiUpdateUser']);
+    Route::post('/users/{user}', [UserController::class, 'apiUpdateUser']);
 
 
 });

@@ -12,12 +12,22 @@
                 <label class="block text-gray-700 text-sm font-bold mb-2" for="avatar">
                     Avatar
                 </label>
-                <input @change="onFileChange" class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" id="avatar" type="file">
-                <div v-if="avatarPreview" class="mt-4">
-                    <img :src="avatarPreview" alt="Avatar Preview" class="w-32 h-32 rounded-full object-cover">
-                </div>
-                <div v-else-if="authStore.user && authStore.user.avatar" class="mt-4">
-                    <img :src="authStore.user.avatar" alt="Current Avatar" class="w-32 h-32 rounded-full object-cover">
+                <div
+                    @dragover.prevent="onDragOver"
+                    @dragleave.prevent="onDragLeave"
+                    @drop.prevent="onDrop"
+                    @click="triggerFileInput"
+                    :class="['w-full', 'p-6', 'border-2', 'border-dashed', 'rounded-md', 'text-center', 'cursor-pointer', isDragging ? 'border-blue-500' : 'border-gray-300']"
+                >
+                    <input type="file" ref="fileInput" @change="onFileChange" class="hidden" id="avatar">
+                    <p v-if="!avatarPreview && !(authStore.user && authStore.user.avatar)">Drag & drop your avatar here, or click to select a file.</p>
+                    <div v-if="avatarPreview" class="mt-4">
+                        <img :src="avatarPreview" alt="Avatar Preview" class="w-32 h-32 rounded-full object-cover mx-auto">
+                    </div>
+                    <div v-else-if="authStore.user && authStore.user.avatar" class="mt-4">
+                        <img :src="authStore.user.avatar" alt="Current Avatar" class="w-32 h-32 rounded-full object-cover mx-auto">
+                    </div>
+                    <p v-if="!avatarPreview && authStore.user && authStore.user.avatar" class="mt-2">Drag & drop a new avatar or click to change.</p>
                 </div>
             </div>
             <div class="flex items-center justify-between">
@@ -40,6 +50,8 @@ const authStore = useAuthStore();
 const name = ref('');
 const avatarFile = ref(null);
 const avatarPreview = ref(null);
+const isDragging = ref(false);
+const fileInput = ref(null);
 
 onMounted(() => {
     // Get user data directly from the auth store instead of making an API call
@@ -50,14 +62,39 @@ onMounted(() => {
 
 const onFileChange = (e) => {
     const file = e.target.files[0];
-    avatarFile.value = file;
     if (file) {
+        avatarFile.value = file;
         const reader = new FileReader();
         reader.onload = (e) => {
             avatarPreview.value = e.target.result;
         };
         reader.readAsDataURL(file);
     }
+};
+
+const onDragOver = () => {
+    isDragging.value = true;
+};
+
+const onDragLeave = () => {
+    isDragging.value = false;
+};
+
+const onDrop = (e) => {
+    isDragging.value = false;
+    const file = e.dataTransfer.files[0];
+    if (file) {
+        avatarFile.value = file;
+        const reader = new FileReader();
+        reader.onload = (e) => {
+            avatarPreview.value = e.target.result;
+        };
+        reader.readAsDataURL(file);
+    }
+};
+
+const triggerFileInput = () => {
+    fileInput.value.click();
 };
 
 const updateProfile = async () => {
@@ -69,7 +106,7 @@ const updateProfile = async () => {
     formData.append('_method', 'PATCH');
 
     try {
-        const response = await api.post(`/api/users/${authStore.user.id}`, formData, {
+        const response = await api.post(`/users/${authStore.user.id}`, formData, {
             headers: {
                 'Content-Type': 'multipart/form-data',
             },
