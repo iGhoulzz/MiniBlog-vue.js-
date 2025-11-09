@@ -33,8 +33,8 @@
 <script setup>
 import { useRouter } from 'vue-router';
 import { useAuthStore } from '../stores/auth.js';
-import UserAvatarDropdown from '../components/Layout/UserAvatarDropdown.vue';
 import Notification from '../components/Notification.vue';
+import UserAvatarDropdown from '../components/Layout/UserAvatarDropdown.vue';
 
 const router = useRouter();
 const authStore = useAuthStore();

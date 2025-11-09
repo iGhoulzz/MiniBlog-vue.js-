@@ -82,7 +82,6 @@ const route = useRoute();
 const notificationStore = useNotificationStore();
 const post = ref(null);
 const newCommentContent = ref('');
-const commentError = ref('');
 
 const fetchPost = async () => {
   try {
@@ -100,7 +99,10 @@ const fetchPost = async () => {
 
 const handleCreateComment = async () => {
   if (newCommentContent.value.trim() === '') {
-    commentError.value = 'Comment cannot be empty.';
+    notificationStore.showNotification({
+      message: 'Comment cannot be empty.',
+      type: 'error'
+    });
     return;
   }
 
@@ -110,7 +112,6 @@ const handleCreateComment = async () => {
       content: newCommentContent.value,
     });
     newCommentContent.value = '';
-    commentError.value = '';
     notificationStore.showNotification({
       message: 'Comment posted successfully!',
       type: 'success'
@@ -118,9 +119,15 @@ const handleCreateComment = async () => {
     await fetchPost(); // Refetch post to show the new comment
   } catch (error) {
     if (error.response && error.response.data.errors) {
-      commentError.value = error.response.data.errors.content?.[0] || 'An error occurred while posting the comment.';
+      notificationStore.showNotification({
+        message: error.response.data.errors.content?.[0] || 'An error occurred while posting the comment.',
+        type: 'error'
+      });
     } else {
-      commentError.value = 'An error occurred while posting the comment.';
+      notificationStore.showNotification({
+        message: 'An error occurred while posting the comment.',
+        type: 'error'
+      });
       console.error(error);
     }
   }
