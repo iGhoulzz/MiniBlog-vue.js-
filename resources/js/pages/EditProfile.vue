@@ -6,7 +6,7 @@
                 <label class="block text-gray-700 text-sm font-bold mb-2" for="name">
                     Name
                 </label>
-                <input v-model="name" class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" id="name" type="text" placeholder="Name">
+                <input v-model="name" class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" id="name" type="text" placeholder="Your Name">
             </div>
             <div class="mb-6">
                 <label class="block text-gray-700 text-sm font-bold mb-2" for="avatar">
@@ -20,15 +20,19 @@
                     :class="['w-full', 'p-6', 'border-2', 'border-dashed', 'rounded-md', 'text-center', 'cursor-pointer', isDragging ? 'border-blue-500' : 'border-gray-300']"
                 >
                     <input type="file" ref="fileInput" @change="onFileChange" class="hidden" id="avatar">
-                    <p v-if="!avatarPreview && !(authStore.user && authStore.user.avatar)">Drag & drop your avatar here, or click to select a file.</p>
+                    <p v-if="!avatarPreview && !(authStore.user && authStore.user.avatar_url) && !avatarRemoved">Drag & drop your avatar here, or click to select a file.</p>
                     <div v-if="avatarPreview" class="mt-4">
                         <img :src="avatarPreview" alt="Avatar Preview" class="w-32 h-32 rounded-full object-cover mx-auto">
                     </div>
-                    <div v-else-if="authStore.user && authStore.user.avatar" class="mt-4">
-                        <img :src="authStore.user.avatar" alt="Current Avatar" class="w-32 h-32 rounded-full object-cover mx-auto">
+                    <div v-else-if="authStore.user && authStore.user.avatar_url && !avatarRemoved" class="mt-4">
+                        <img :src="authStore.user.avatar_url" alt="Current Avatar" class="w-32 h-32 rounded-full object-cover mx-auto">
                     </div>
-                    <p v-if="!avatarPreview && authStore.user && authStore.user.avatar" class="mt-2">Drag & drop a new avatar or click to change.</p>
+                     <p v-if="avatarRemoved" class="text-gray-500">Avatar will be removed upon update.</p>
+                    <p v-if="!avatarPreview && authStore.user && authStore.user.avatar_url && !avatarRemoved" class="mt-2">Drag & drop a new avatar or click to change.</p>
                 </div>
+                <button v-if="authStore.user?.avatar_url && !avatarRemoved" @click.prevent="markAvatarForRemoval" type="button" class="mt-2 text-sm text-red-500 hover:text-red-700">
+                    Remove Avatar
+                </button>
             </div>
             <div class="flex items-center justify-between">
                 <button class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline" type="submit">
@@ -54,17 +58,24 @@ const avatarFile = ref(null);
 const avatarPreview = ref(null);
 const isDragging = ref(false);
 const fileInput = ref(null);
+const avatarRemoved = ref(false);
 
 onMounted(() => {
-    // Get user data directly from the auth store instead of making an API call
     if (authStore.user) {
         name.value = authStore.user.name;
     }
 });
 
+const markAvatarForRemoval = () => {
+    avatarFile.value = null;
+    avatarPreview.value = null;
+    avatarRemoved.value = true;
+};
+
 const onFileChange = (e) => {
     const file = e.target.files[0];
     if (file) {
+        avatarRemoved.value = false;
         avatarFile.value = file;
         const reader = new FileReader();
         reader.onload = (e) => {
@@ -74,18 +85,14 @@ const onFileChange = (e) => {
     }
 };
 
-const onDragOver = () => {
-    isDragging.value = true;
-};
-
-const onDragLeave = () => {
-    isDragging.value = false;
-};
+const onDragOver = () => { isDragging.value = true; };
+const onDragLeave = () => { isDragging.value = false; };
 
 const onDrop = (e) => {
     isDragging.value = false;
     const file = e.dataTransfer.files[0];
     if (file) {
+        avatarRemoved.value = false;
         avatarFile.value = file;
         const reader = new FileReader();
         reader.onload = (e) => {
@@ -95,36 +102,33 @@ const onDrop = (e) => {
     }
 };
 
-const triggerFileInput = () => {
-    fileInput.value.click();
-};
+const triggerFileInput = () => { fileInput.value.click(); };
 
 const updateProfile = async () => {
     const formData = new FormData();
     formData.append('name', name.value);
+
     if (avatarFile.value) {
         formData.append('avatar', avatarFile.value);
+    } else if (avatarRemoved.value) {
+        formData.append('remove_avatar', 'true');
     }
+
     formData.append('_method', 'PATCH');
 
     try {
-        const response = await api.post(`/users/${authStore.user.id}`, formData, {
-            headers: {
-                'Content-Type': 'multipart/form-data',
-            },
+        await api.post(`/users/${authStore.user.id}`, formData, {
+            headers: { 'Content-Type': 'multipart/form-data' },
         });
-        // Update the user in the auth store with the new data
-        // Handle both response.data.user and response.data formats
-        const updatedUser = response.data.user || response.data;
-        authStore.setUser(authStore.token, updatedUser);
 
-        // Show success notification
+        // Fetch fresh user data to ensure the store is 100% correct
+        await authStore.fetchUser();
+
         notificationStore.showNotification({
             message: 'Profile updated successfully!',
             type: 'success'
         });
 
-        // After successful update, redirect to the user's profile page.
         router.push({ name: 'UserProfile', params: { id: authStore.user.id } });
     } catch (error) {
         notificationStore.showNotification({

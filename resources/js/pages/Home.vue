@@ -121,3 +121,7 @@ const handleDeletePost = async (postId) => {
   }
 };
 </script>
+
+<style scoped>
+/* Add any component-specific styles here */
+</style>

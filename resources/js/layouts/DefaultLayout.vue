@@ -6,10 +6,7 @@
       <div class="flex items-center">
 
         <div v-if="authStore.user" class="flex items-center">
-          <span class="font-semibold text-gray-700 mr-4">Welcome, {{ authStore.user.name }}</span>
-          <button @click="handleLogout" class="bg-red-500 text-white font-bold py-2 px-4 rounded-lg hover:bg-red-600 transition">
-            Logout
-          </button>
+          <UserAvatarDropdown />
         </div>
 
         <div v-else>
@@ -35,26 +32,12 @@
 
 <script setup>
 import { useRouter } from 'vue-router';
-import { useAuthStore } from '../stores/auth.js'; // Import the Pinia store function
-import api from '../services/api.js'; // Assuming you have the api service
+import { useAuthStore } from '../stores/auth.js';
+import UserAvatarDropdown from '../components/Layout/UserAvatarDropdown.vue';
 import Notification from '../components/Notification.vue';
 
 const router = useRouter();
-const authStore = useAuthStore(); // Get the store instance
-
-// --- Logout Function ---
-const handleLogout = async () => {
-  try {
-    // Call the backend to invalidate the token
-    await api.post('/logout');
-  } catch (error) {
-    console.error('Logout failed on server, but logging out locally.', error);
-  }
-  // Clear user data from the store
-  authStore.logout();
-  // Handle routing in the component
-  router.push('/auth/login');
-};
+const authStore = useAuthStore();
 </script>
 
 <style>

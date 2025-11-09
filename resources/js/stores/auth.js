@@ -1,42 +1,51 @@
 import { defineStore } from 'pinia';
 import { ref, computed } from 'vue';
 import { useNotificationStore } from './notification';
+import api from '../services/api'; // Make sure 'api' service is imported
 
 export const useAuthStore = defineStore('auth', () => {
-    // --- 1. STATE ---
-    // Get user data from localStorage to persist login state
     const user = ref(JSON.parse(localStorage.getItem('user')) || null);
     const token = ref(localStorage.getItem('token') || null);
     const notificationStore = useNotificationStore();
 
-    /**
-     * Sets the user's token and data, and stores it in localStorage.
-     * @param {string} newToken - The authentication token.
-     * @param {object} userData - The user's data.
-     */
     function setUser(newToken, userData) {
         user.value = userData;
         token.value = newToken;
         localStorage.setItem('token', newToken);
         localStorage.setItem('user', JSON.stringify(userData));
+        // Also update the api header whenever user is set
+        if (newToken) {
+            api.defaults.headers.common['Authorization'] = `Bearer ${newToken}`;
+        }
     }
 
-    /**
-     * Clears the user's session data from the store and localStorage.
-     * Routing should be handled by the component calling this function.
-     */
     function logout() {
-        const message = 'You have been logged out.';
-
+        notificationStore.showNotification({ message: 'You have been logged out.' });
         user.value = null;
         token.value = null;
         localStorage.removeItem('token');
         localStorage.removeItem('user');
-
-        notificationStore.showNotification({ message });
+        delete api.defaults.headers.common['Authorization'];
     }
 
-    const isAuthenticated = computed(() => !!token.value);
+    // START: ADD THIS ACTION
+    async function fetchUser() {
+        if (!token.value) {
+            return;
+        }
+        try {
+            const response = await api.get('/user');
+            // Re-use the setUser function to update state and local storage
+            setUser(token.value, response.data);
+        } catch (error) {
+            console.error('Failed to fetch user, logging out.', error);
+            logout(); // If fetching user fails, the token is likely invalid
+        }
+    }
+    // END: ADD THIS ACTION
 
-    return { user, token, isAuthenticated, setUser, logout };
+    const isAuthenticated = computed(() => !!token.value && !!user.value);
+
+    // Expose the new action
+    return { user, token, isAuthenticated, setUser, logout, fetchUser };
 });

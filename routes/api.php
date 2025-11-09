@@ -1,6 +1,7 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
+use Illuminate\Http\Request;
 use App\Http\Controllers\LoginController;
 use App\Http\Controllers\RegisterController;
 use App\Http\Controllers\PostController;
@@ -25,6 +26,9 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/comments/{comment}/edit', [CommentController::class, 'apiCommentEdit']);
     Route::patch('/comments/{comment}', [CommentController::class, 'apiCommentUpdate']);
 
+    Route::get('/user', function (Request $request) {
+        return $request->user();
+    });
     Route::get('/users/{user}', [UserController::class, 'apiShowUser']);
     Route::patch('/users/{user}', [UserController::class, 'apiUpdateUser']);
     Route::post('/users/{user}', [UserController::class, 'apiUpdateUser']);

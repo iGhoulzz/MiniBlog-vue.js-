@@ -2,9 +2,16 @@
   <div class="bg-white p-6 rounded-lg shadow-md" @dblclick="navigateToPost">
     <div class="flex items-start">
       <router-link :to="`/users/${post.user.id}`" class="shrink-0">
-        <img v-if="post.user.avatar" :src="`/storage/${post.user.avatar}`" alt="User Avatar" class="w-12 h-12 rounded-full object-cover">
-        <div v-else class="w-12 h-12 rounded-full bg-gray-300 flex items-center justify-center font-bold text-gray-600">
-          {{ post.user.name.substring(0, 1) }}
+        <div class="flex-shrink-0">
+          <img
+            v-if="post.user?.avatar_url"
+            :src="post.user.avatar_url"
+            alt="Avatar"
+            class="w-10 h-10 rounded-full object-cover"
+          >
+          <div v-else class="w-10 h-10 rounded-full bg-gray-300 flex items-center justify-center font-bold text-gray-600">
+            {{ post.user?.name?.substring(0, 1) }}
+          </div>
         </div>
       </router-link>
       <div class="ml-4 flex-grow">
@@ -34,31 +41,33 @@
     <div v-if="showComments" class="mt-6 border-t pt-6">
       <!-- Create Comment Form -->
       <div class="mb-6">
-        <h3 class="text-lg font-semibold mb-4">Leave a Comment</h3>
-        <div v-if="commentError" class="p-3 mb-4 text-sm text-red-700 bg-red-100 rounded-lg">
-          {{ commentError }}
-        </div>
-        <form @submit.prevent="handleCreateComment">
-          <textarea
-            v-model="newCommentContent"
-            class="w-full border border-gray-300 rounded-lg p-4 focus:ring-blue-500 focus:border-blue-500 transition"
-            rows="3"
-            placeholder="Write your comment..."
-          ></textarea>
-          <div class="flex justify-end mt-4">
-            <button
-              type="submit"
-              class="bg-blue-600 text-white font-bold py-2 px-6 rounded-lg hover:bg-blue-700 transition"
-            >
-              Submit
-            </button>
+        <h3 class="text-lg font-semibold mb-4 text-gray-800">Leave a Comment</h3>
+        <div class="ml-4 pl-4 border-l-2 border-blue-300 bg-blue-50/30 rounded-r-lg p-4">
+          <div v-if="commentError" class="p-3 mb-4 text-sm text-red-700 bg-red-100 rounded-lg">
+            {{ commentError }}
           </div>
-        </form>
+          <form @submit.prevent="handleCreateComment">
+            <textarea
+              v-model="newCommentContent"
+              class="w-full border border-gray-300 rounded-lg p-3 focus:ring-blue-500 focus:border-blue-500 transition text-sm"
+              rows="3"
+              placeholder="Write your comment..."
+            ></textarea>
+            <div class="flex justify-end mt-3">
+              <button
+                type="submit"
+                class="bg-blue-600 text-white font-semibold py-2 px-5 rounded-lg hover:bg-blue-700 transition text-sm"
+              >
+                Submit Comment
+              </button>
+            </div>
+          </form>
+        </div>
       </div>
 
       <!-- Comments List -->
-      <h3 class="text-lg font-semibold mb-4">Comments</h3>
-      <div v-if="comments.length > 0" class="space-y-4">
+      <h3 class="text-lg font-semibold mb-4 text-gray-800">Comments ({{ comments.length }})</h3>
+      <div v-if="comments.length > 0" class="space-y-3 ml-4 pl-4 border-l-2 border-gray-300">
         <CommentItem
           v-for="comment in comments"
           :key="comment.id"
@@ -67,8 +76,8 @@
           @update-comment="handleUpdateComment"
         />
       </div>
-      <div v-else>
-        <p class="text-gray-500">No comments yet. Be the first to comment!</p>
+      <div v-else class="ml-4 pl-4 border-l-2 border-gray-200">
+        <p class="text-gray-500 text-sm italic">No comments yet. Be the first to comment!</p>
       </div>
     </div>
   </div>

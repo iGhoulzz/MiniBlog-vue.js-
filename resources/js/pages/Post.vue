@@ -3,14 +3,19 @@
     <div v-if="post" class="bg-white p-6 rounded-lg shadow-md">
       <!-- Post Details -->
       <div class="flex items-start">
-        <div class="flex-shrink-0">
-          <div class="w-12 h-12 rounded-full bg-gray-300 flex items-center justify-center font-bold text-gray-600">
-            {{ post.user.name.substring(0, 1) }}
+        <!-- Clickable Avatar -->
+        <router-link :to="`/users/${post.user.id}`" class="flex-shrink-0 cursor-pointer hover:opacity-80 transition-opacity">
+          <img v-if="post.user.avatar_url" :src="post.user.avatar_url" alt="User Avatar" class="w-12 h-12 rounded-full object-cover border-2 border-gray-200">
+          <div v-else class="w-12 h-12 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center font-bold text-white border-2 border-gray-200">
+            {{ post.user.name.substring(0, 1).toUpperCase() }}
           </div>
-        </div>
+        </router-link>
         <div class="ml-4 flex-grow">
           <div>
-            <span class="font-bold text-gray-800">{{ post.user.name }}</span>
+            <!-- Clickable Username -->
+            <router-link :to="`/users/${post.user.id}`" class="font-bold text-gray-800 hover:text-blue-600 hover:underline transition-colors">
+              {{ post.user.name }}
+            </router-link>
             <span class="text-gray-500 text-sm"> · {{ formatTimestamp(post.created_at) }}</span>
           </div>
           <p class="mt-2 text-gray-700 whitespace-pre-wrap">{{ post.content }}</p>
@@ -19,29 +24,34 @@
 
       <!-- Create Comment Form -->
       <div class="mt-6 border-t pt-6">
-        <h3 class="text-lg font-semibold mb-4">Leave a Comment</h3>
-        <form @submit.prevent="handleCreateComment">
-          <textarea
-            v-model="newCommentContent"
-            class="w-full border border-gray-300 rounded-lg p-4 focus:ring-blue-500 focus:border-blue-500 transition"
-            rows="3"
-            placeholder="Write your comment..."
-          ></textarea>
-          <div class="flex justify-end mt-4">
-            <button
-              type="submit"
-              class="bg-blue-600 text-white font-bold py-2 px-6 rounded-lg hover:bg-blue-700 transition"
-            >
-              Submit
-            </button>
+        <h3 class="text-lg font-semibold mb-4 text-gray-800">Leave a Comment</h3>
+        <div class="ml-4 pl-4 border-l-2 border-blue-300 bg-blue-50/30 rounded-r-lg p-4">
+          <div v-if="commentError" class="p-3 mb-4 text-sm text-red-700 bg-red-100 rounded-lg">
+            {{ commentError }}
           </div>
-        </form>
+          <form @submit.prevent="handleCreateComment">
+            <textarea
+              v-model="newCommentContent"
+              class="w-full border border-gray-300 rounded-lg p-3 focus:ring-blue-500 focus:border-blue-500 transition text-sm"
+              rows="3"
+              placeholder="Write your comment..."
+            ></textarea>
+            <div class="flex justify-end mt-3">
+              <button
+                type="submit"
+                class="bg-blue-600 text-white font-semibold py-2 px-5 rounded-lg hover:bg-blue-700 transition text-sm"
+              >
+                Submit Comment
+              </button>
+            </div>
+          </form>
+        </div>
       </div>
 
       <!-- Comments List -->
       <div class="mt-6 border-t pt-6">
-        <h3 class="text-lg font-semibold mb-4">Comments</h3>
-        <div v-if="post.comments && post.comments.length > 0" class="space-y-4">
+        <h3 class="text-lg font-semibold mb-4 text-gray-800">Comments ({{ post.comments?.length || 0 }})</h3>
+        <div v-if="post.comments && post.comments.length > 0" class="space-y-3 ml-4 pl-4 border-l-2 border-gray-300">
           <CommentItem
             v-for="comment in post.comments"
             :key="comment.id"
@@ -50,8 +60,8 @@
             @update-comment="handleUpdateComment"
           />
         </div>
-        <div v-else>
-          <p class="text-gray-500">No comments yet. Be the first to comment!</p>
+        <div v-else class="ml-4 pl-4 border-l-2 border-gray-200">
+          <p class="text-gray-500 text-sm italic">No comments yet. Be the first to comment!</p>
         </div>
       </div>
     </div>
@@ -72,6 +82,7 @@ const route = useRoute();
 const notificationStore = useNotificationStore();
 const post = ref(null);
 const newCommentContent = ref('');
+const commentError = ref('');
 
 const fetchPost = async () => {
   try {
@@ -89,10 +100,7 @@ const fetchPost = async () => {
 
 const handleCreateComment = async () => {
   if (newCommentContent.value.trim() === '') {
-    notificationStore.showNotification({
-      message: 'Comment cannot be empty.',
-      type: 'error'
-    });
+    commentError.value = 'Comment cannot be empty.';
     return;
   }
 
@@ -102,6 +110,7 @@ const handleCreateComment = async () => {
       content: newCommentContent.value,
     });
     newCommentContent.value = '';
+    commentError.value = '';
     notificationStore.showNotification({
       message: 'Comment posted successfully!',
       type: 'success'
@@ -109,15 +118,9 @@ const handleCreateComment = async () => {
     await fetchPost(); // Refetch post to show the new comment
   } catch (error) {
     if (error.response && error.response.data.errors) {
-      notificationStore.showNotification({
-        message: error.response.data.errors.content?.[0] || 'An error occurred while posting the comment.',
-        type: 'error'
-      });
+      commentError.value = error.response.data.errors.content?.[0] || 'An error occurred while posting the comment.';
     } else {
-      notificationStore.showNotification({
-        message: 'An error occurred while posting the comment.',
-        type: 'error'
-      });
+      commentError.value = 'An error occurred while posting the comment.';
       console.error(error);
     }
   }

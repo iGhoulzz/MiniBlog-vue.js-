@@ -55,14 +55,13 @@ protected $appends = ['avatar_url'];
     }
 
     /**
-     * Get the user's avatar.
+     * Get the user's avatar URL.
      *
-     * @param  string|null  $value
      * @return string|null
      */
-    public function getAvatarUrlAttribute($value)
+    public function getAvatarUrlAttribute()
     {
-        return $value ? Storage::url($value) : null;
+        return $this->avatar ? Storage::url($this->avatar) : null;
     }
 
 
