@@ -1,0 +1,26 @@
+<?php
+
+namespace App\Policies;
+
+use App\Models\Conversation;
+use App\Models\User;
+
+class ConversationPolicy
+{
+    public function view(User $user, Conversation $conversation): bool
+    {
+        return $conversation->users->contains($user->id);
+    }
+
+    public function delete(User $user, Conversation $conversation): bool
+    {
+        return $conversation->users->contains($user->id);
+    }
+
+
+
+    public function __construct()
+    {
+        //
+    }
+}

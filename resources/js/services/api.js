@@ -1,8 +1,11 @@
 import axios from 'axios';
 import { useAuthStore } from '../stores/auth';
 
+const appUrl = (import.meta.env.VITE_APP_URL ?? '').replace(/\/$/, '');
+const baseURL = appUrl ? `${appUrl}/api` : '/api';
+
 const api = axios.create({
-    baseURL: 'http://miniblog.test/api',
+    baseURL,
     headers: {
         'Content-Type': 'application/json',
         'Accept': 'application/json',

@@ -5,16 +5,10 @@
     </Transition>
   </router-view>
   <Notification />
+  <ChatDock />
 </template>
 
 <script setup>
 import Notification from './components/Notification.vue';
-import { useAuthStore } from './stores/auth';
-import { onMounted } from 'vue';
-
-const authStore = useAuthStore();
-
-onMounted(() => {
-  authStore.fetchUser();
-});
+import ChatDock from './components/Chat/ChatDock.vue';
 </script>

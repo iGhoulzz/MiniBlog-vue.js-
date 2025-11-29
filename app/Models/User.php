@@ -64,5 +64,16 @@ protected $appends = ['avatar_url'];
         return $this->avatar ? Storage::url($this->avatar) : null;
     }
 
+    public function conversations()
+    {
+        return $this->belongsToMany(Conversation::class, 'conversation_user');
+    }
+
+    public function readMessages()
+    {
+
+        return $this->belongsToMany(Message::class, 'message_user')
+                    ->withTimestamps();
+    }
 
 }

@@ -1,11 +1,12 @@
 <template>
   <div id="app-layout">
-    <nav class="bg-white p-4 rounded-lg shadow-md flex justify-between items-center mb-8 max-w-3xl mx-auto mt-10">
-      <router-link to="/" class="text-2xl font-bold text-blue-600">MiniBlog+ (Vue)</router-link>
+    <nav class="bg-white dark:bg-gray-800 p-4 rounded-lg shadow-md flex justify-between items-center mb-8 max-w-3xl mx-auto mt-10 transition-colors duration-300">
+      <router-link to="/" class="text-2xl font-bold text-blue-600 dark:text-blue-400">MiniBlog+ (Vue)</router-link>
 
       <div class="flex items-center">
 
-        <div v-if="authStore.user" class="flex items-center">
+        <div v-if="authStore.user" class="flex items-center space-x-4">
+          <ChatDropdown />
           <UserAvatarDropdown />
         </div>
 
@@ -26,24 +27,17 @@
       </router-view>
     </main>
 
-    <Notification />
   </div>
 </template>
 
 <script setup>
-import { useRouter } from 'vue-router';
 import { useAuthStore } from '../stores/auth.js';
-import Notification from '../components/Notification.vue';
 import UserAvatarDropdown from '../components/Layout/UserAvatarDropdown.vue';
+import ChatDropdown from '../components/Chat/ChatDropdown.vue';
 
-const router = useRouter();
 const authStore = useAuthStore();
 </script>
 
 <style>
-/* Global body styles */
-body {
-  background-color: #f0f2f5;
-  font-family: sans-serif;
-}
+/* Global styles are now in app.css */
 </style>

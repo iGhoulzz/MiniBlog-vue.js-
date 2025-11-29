@@ -8,6 +8,10 @@ export const useAuthStore = defineStore('auth', () => {
     const token = ref(localStorage.getItem('token') || null);
     const notificationStore = useNotificationStore();
 
+    if (token.value) {
+      api.defaults.headers.common['Authorization'] = `Bearer ${token.value}`;
+    }
+
     function setUser(newToken, userData) {
         user.value = userData;
         token.value = newToken;

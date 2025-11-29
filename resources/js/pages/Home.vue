@@ -1,34 +1,32 @@
 <template>
   <div class="space-y-6">
 
-    <div class="bg-white p-6 rounded-lg shadow-md">
-      <h2 class="text-xl font-semibold mb-4">Create a New Post</h2>
+    <!-- Create Post Form -->
+    <BaseCard class="mb-8 p-6" v-if="authStore.user">
+      <h2 class="text-xl font-bold mb-4 text-gray-800 dark:text-white">Create a New Post</h2>
 
-      <div v-if="postError" class="p-3 mb-4 text-sm text-red-700 bg-red-100 rounded-lg">
+      <div v-if="postError" class="p-3 mb-4 text-sm text-red-700 bg-red-100 dark:bg-red-900 dark:text-red-200 rounded-lg">
         {{ postError }}
       </div>
 
       <form @submit.prevent="handleCreatePost">
         <textarea
           v-model="newPostContent"
-          class="w-full border border-gray-300 rounded-lg p-4 focus:ring-blue-500 focus:border-blue-500 transition"
-          rows="4"
+          class="w-full border border-gray-300 dark:border-gray-600 rounded-lg p-4 mb-4 focus:ring-blue-500 focus:border-blue-500 transition bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400"
+          rows="3"
           :placeholder="`What's on your mind, ${authStore.user?.name}?`"
         ></textarea>
-
-        <div class="flex justify-end mt-4">
-          <button
-            type="submit"
-            class="bg-blue-600 text-white font-bold py-2 px-6 rounded-lg hover:bg-blue-700 transition"
-          >
-            Post
-          </button>
+        <div class="flex justify-end">
+          <BaseButton type="submit" :disabled="isCreating">
+            <span v-if="isCreating">Posting...</span>
+            <span v-else>Post</span>
+          </BaseButton>
         </div>
       </form>
-    </div>
+    </BaseCard>
 
     <div class="space-y-6">
-      <h2 class="text-2xl font-bold text-gray-800">Post Feed</h2>
+      <h2 class="text-2xl font-bold text-gray-800 dark:text-white">Post Feed</h2>
 
       <PostItem
         v-for="post in posts"
@@ -39,8 +37,8 @@
         @comment-deleted="fetchPosts"
       />
 
-      <div v-if="posts.length === 0" class="bg-white p-6 rounded-lg shadow-md text-center">
-        <p class="text-gray-500">No posts yet. Be the first to share something!</p>
+      <div v-if="posts.length === 0" class="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-md text-center transition-colors duration-300">
+        <p class="text-gray-500 dark:text-gray-400">No posts yet. Be the first to share something!</p>
       </div>
     </div>
   </div>
@@ -53,11 +51,14 @@ import { useAuthStore } from '../stores/auth.js';
 import { useNotificationStore } from '../stores/notification';
 import api from '../services/api.js';
 import PostItem from '../components/Posts/PostItem.vue';
+import BaseCard from '../components/UI/BaseCard.vue';
+import BaseButton from '../components/UI/BaseButton.vue';
 
 // --- 1. STATE ---
 const posts = ref([]);
 const newPostContent = ref('');
 const postError = ref('');
+const isCreating = ref(false); // New state for create post button loading
 const router = useRouter();
 const authStore = useAuthStore();
 const notificationStore = useNotificationStore();

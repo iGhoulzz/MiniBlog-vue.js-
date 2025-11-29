@@ -1,94 +1,78 @@
 <template>
   <div class="flex items-center justify-center min-h-screen bg-gray-100">
-    <div class="w-full max-w-md p-8 space-y-6 bg-white rounded-lg shadow-md">
-
-      <h1 class="text-3xl font-bold text-center text-gray-800">
+    <BaseCard class="w-full max-w-md p-8 space-y-6">
+      <h1 class="text-3xl font-bold text-center text-gray-800 dark:text-white">
         Create Your Account
       </h1>
 
+      <div v-if="errorMessage" class="p-4 text-sm text-red-700 bg-red-100 rounded-lg dark:bg-red-900 dark:text-red-200">
+        {{ errorMessage }}
+      </div>
+
       <form @submit.prevent="handleRegister" class="space-y-6">
+        <BaseInput
+          id="name"
+          label="Name"
+          type="text"
+          v-model="form.name"
+          placeholder="Your Name"
+          required
+          :error="errors.name ? errors.name[0] : ''"
+        />
 
-        <div>
-          <label for="name" class="block text-sm font-medium text-gray-700">
-            Name
-          </label>
-          <input
-            type="text"
-            id="name"
-            v-model="form.name"
-            required
-            class="w-full px-3 py-2 mt-1 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500"
-            placeholder="Your Name"
-          >
-        </div>
+        <BaseInput
+          id="email"
+          label="Email Address"
+          type="email"
+          v-model="form.email"
+          placeholder="you@example.com"
+          required
+          :error="errors.email ? errors.email[0] : ''"
+        />
 
-        <div>
-          <label for="email" class="block text-sm font-medium text-gray-700">
-            Email Address
-          </label>
-          <input
-            type="email"
-            id="email"
-            v-model="form.email"
-            required
-            class="w-full px-3 py-2 mt-1 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500"
-            placeholder="you@example.com"
-          >
-        </div>
+        <BaseInput
+          id="password"
+          label="Password"
+          type="password"
+          v-model="form.password"
+          placeholder="••••••••"
+          required
+          :error="errors.password ? errors.password[0] : ''"
+        />
 
-        <div>
-          <label for="password" class="block text-sm font-medium text-gray-700">
-            Password
-          </label>
-          <input
-            type="password"
-            id="password"
-            v-model="form.password"
-            required
-            class="w-full px-3 py-2 mt-1 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500"
-            placeholder="••••••••"
-          >
-        </div>
+        <BaseInput
+          id="password_confirmation"
+          label="Confirm Password"
+          type="password"
+          v-model="form.password_confirmation"
+          placeholder="••••••••"
+          required
+        />
 
-        <div>
-          <label for="password_confirmation" class="block text-sm font-medium text-gray-700">
-            Confirm Password
-          </label>
-          <input
-            type="password"
-            id="password_confirmation"
-            v-model="form.password_confirmation"
-            required
-            class="w-full px-3 py-2 mt-1 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500"
-            placeholder="••••••••"
-          >
-        </div>
-
-        <div>
-          <button
-            type="submit"
-            class="w-full py-2 px-4 font-bold text-white bg-blue-600 rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
-          >
-            Create Account
-          </button>
-        </div>
+        <BaseButton type="submit" class="w-full" :disabled="isLoading">
+          <span v-if="isLoading">Creating account...</span>
+          <span v-else>Register</span>
+        </BaseButton>
       </form>
 
-      <p class="text-sm text-center text-gray-600">
+      <p class="text-sm text-center text-gray-600 dark:text-gray-400">
         Already have an account?
-        <router-link to="/auth/login" class="font-medium text-blue-600 hover:underline">
+        <router-link to="/auth/login" class="font-medium text-blue-600 dark:text-blue-400 hover:underline">
           Login here
         </router-link>
       </p>
-    </div>
+    </BaseCard>
   </div>
 </template>
 
 <script setup>
-import { reactive } from 'vue';
+import { reactive, ref } from 'vue';
 import { useRouter } from 'vue-router';
-import { useNotificationStore } from '../stores/notification.js';
+import { useAuthStore } from '../stores/auth';
 import api from '../services/api.js';
+import BaseCard from '../components/UI/BaseCard.vue';
+import BaseInput from '../components/UI/BaseInput.vue';
+import BaseButton from '../components/UI/BaseButton.vue';
 
 // --- 1. STATE ---
 // Create a reactive object for our form.

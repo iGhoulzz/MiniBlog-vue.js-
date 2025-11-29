@@ -7,6 +7,8 @@ use App\Http\Controllers\RegisterController;
 use App\Http\Controllers\PostController;
 use App\Http\Controllers\CommentController;
 use App\Http\Controllers\UserController;
+use App\Http\Controllers\ConversationController;
+use App\Http\Controllers\MessageController;
 
 Route::post('/register', [RegisterController::class, 'apiRegister']);
 Route::post('/login', [LoginController::class, 'apiLogin']);
@@ -26,6 +28,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/comments/{comment}/edit', [CommentController::class, 'apiCommentEdit']);
     Route::patch('/comments/{comment}', [CommentController::class, 'apiCommentUpdate']);
 
+
     Route::get('/user', function (Request $request) {
         return $request->user();
     });
@@ -33,8 +36,12 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::patch('/users/{user}', [UserController::class, 'apiUpdateUser']);
     Route::post('/users/{user}', [UserController::class, 'apiUpdateUser']);
 
+    Route::get('/conversations', [ConversationController::class, 'index']);
+    Route::post('/conversations', [ConversationController::class, 'store']);
+    Route::get('/conversations/{conversation}', [ConversationController::class, 'show']);
+    Route::post('/conversations/{conversation}/read', [ConversationController::class, 'markAsRead']);
+    Route::delete('/conversations/{conversation}', [ConversationController::class, 'destroy']);
+
+    Route::post('/conversations/{conversation}/messages', [MessageController::class, 'store']);
 
 });
-
-
-

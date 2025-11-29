@@ -9,6 +9,8 @@ use App\Models\Comment;
 use Illuminate\Foundation\Support\Providers\AuthServiceProvider as ServiceProvider;
 use App\Policies\CommentPolicy;
 use App\Models\User;
+use App\Models\Conversation;
+use App\Policies\ConversationPolicy;
 use App\Policies\UserPolicy;
 
 class AuthServiceProvider extends ServiceProvider
@@ -22,6 +24,7 @@ class AuthServiceProvider extends ServiceProvider
         Post::class => PostPolicy::class,
         Comment::class => CommentPolicy::class,
         User::class => UserPolicy::class,
+        Conversation::class => ConversationPolicy::class,
     ];
 
     /**

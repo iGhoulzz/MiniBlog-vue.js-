@@ -1,0 +1,20 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Theme Test</title>
+    <script>
+        // Check if dark class is being added/removed
+        setInterval(() => {
+            const isDark = document.documentElement.classList.contains('dark');
+            console.log('Dark mode active:', isDark);
+            console.log('HTML classes:', document.documentElement.className);
+        }, 2000);
+    </script>
+</head>
+<body>
+    <h1>Open browser console to see theme status</h1>
+    <p>Toggle dark mode and watch the console for changes</p>
+</body>
+</html>

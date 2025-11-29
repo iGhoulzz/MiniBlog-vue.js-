@@ -10,8 +10,8 @@
     <div
       v-if="notificationStore.visible"
       :class="[
-        'fixed bottom-5 right-5 text-white px-6 py-3 rounded-lg shadow-lg flex items-center',
-        notificationStore.type === 'success' ? 'bg-green-500' : 'bg-red-500'
+        'fixed bottom-5 right-5 text-white px-6 py-3 rounded-lg shadow-lg flex items-center transition-colors duration-300 z-50',
+        notificationStore.type === 'success' ? 'bg-green-500 dark:bg-green-600' : 'bg-red-500 dark:bg-red-600'
       ]"
     >
       <svg v-if="notificationStore.type === 'success'" xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 mr-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">

@@ -46,7 +46,7 @@ class UserController extends Controller
         }
         $user->update($attributes);
 
-        // ** ADD THIS LINE **
+
         $user->refresh(); // This reloads the model from the DB and runs all accessors
 
         return response()->json([
