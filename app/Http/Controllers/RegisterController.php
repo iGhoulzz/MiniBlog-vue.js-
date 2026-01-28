@@ -3,18 +3,14 @@
 namespace App\Http\Controllers;
 
 use App\Models\User;
-use Illuminate\Http\Request;
+use App\Http\Requests\RegisterRequest;
 use Illuminate\Support\Facades\Hash;
 
 class RegisterController extends Controller
 {
-    public function apiRegister(Request $request)
+    public function apiRegister(RegisterRequest $request)
     {
-        $attributes = $request->validate([
-            'name' => 'required',
-            'email' => 'required|email|unique:users,email',
-            'password' => 'required|min:8|confirmed',
-        ]);
+        $attributes = $request->validated();
 
         $attributes['password'] = Hash::make($attributes['password']);
 

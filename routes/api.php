@@ -9,6 +9,8 @@ use App\Http\Controllers\CommentController;
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\ConversationController;
 use App\Http\Controllers\MessageController;
+use App\Http\Controllers\ReactionController;
+use App\Http\Controllers\NotificationController;
 
 Route::post('/register', [RegisterController::class, 'apiRegister']);
 Route::post('/login', [LoginController::class, 'apiLogin']);
@@ -43,5 +45,12 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::delete('/conversations/{conversation}', [ConversationController::class, 'destroy']);
 
     Route::post('/conversations/{conversation}/messages', [MessageController::class, 'store']);
+
+    Route::get('/reactions', [ReactionController::class, 'index']);
+    Route::post('/react', [ReactionController::class, 'react']);
+
+    Route::get('/notifications', [NotificationController::class, 'index']);
+    Route::post('/notifications/{id}/read', [NotificationController::class, 'markAsRead']);
+    Route::post('/notifications/read-all', [NotificationController::class, 'markAllAsRead']);
 
 });

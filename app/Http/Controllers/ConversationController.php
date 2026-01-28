@@ -9,6 +9,7 @@ use App\Models\Message;
 use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 use App\Events\ConversationCreated;
 use App\Events\MessagesRead;
+use App\Http\Requests\StoreConversationRequest;
 
 
 class ConversationController extends Controller
@@ -27,14 +28,10 @@ class ConversationController extends Controller
     }
 
 
-    public function store(Request $request)
+    public function store(StoreConversationRequest $request)
     {
         $user = $request->user();
-        $attributes = $request->validate([
-            'user_ids' => 'required|array|min:1',
-            'user_ids.*' => 'exists:users,id|distinct',
-            'content' => 'required|string|min:1|max:1000',
-        ]);
+        $attributes = $request->validated();
             $conversation = DB::transaction(function () use ($request, $attributes) {
                 $user = $request->user();
 

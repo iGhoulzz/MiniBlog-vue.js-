@@ -8,6 +8,7 @@ use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Laravel\Sanctum\HasApiTokens;
 use Illuminate\Support\Facades\Storage;
+use App\Traits\HasFile;
 
 
 class User extends Authenticatable
@@ -16,6 +17,8 @@ class User extends Authenticatable
     use HasFactory, Notifiable;
 
     use HasApiTokens;
+
+    use hasFile;
 
     /**
      * The attributes that are mass assignable.
@@ -26,7 +29,7 @@ class User extends Authenticatable
         'name',
         'email',
         'password',
-        'avatar',
+
     ];
 
     /**
@@ -61,7 +64,11 @@ protected $appends = ['avatar_url'];
      */
     public function getAvatarUrlAttribute()
     {
-        return $this->avatar ? Storage::url($this->avatar) : null;
+        $media = $this->media()->where('collection', 'avatar')->first();
+        if ($media) {
+            return Storage::disk($media->disk)->url($media->file_path);
+        }
+        return null;
     }
 
     public function conversations()

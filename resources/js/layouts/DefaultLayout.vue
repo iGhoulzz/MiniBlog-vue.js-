@@ -7,6 +7,7 @@
 
         <div v-if="authStore.user" class="flex items-center space-x-4">
           <ChatDropdown />
+          <NotificationBell />
           <UserAvatarDropdown />
         </div>
 
@@ -33,6 +34,7 @@
 <script setup>
 import { useAuthStore } from '../stores/auth.js';
 import UserAvatarDropdown from '../components/Layout/UserAvatarDropdown.vue';
+import NotificationBell from '../components/Layout/NotificationBell.vue';
 import ChatDropdown from '../components/Chat/ChatDropdown.vue';
 
 const authStore = useAuthStore();

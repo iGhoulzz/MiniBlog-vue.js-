@@ -23,30 +23,60 @@
               </router-link>
               <span class="text-gray-500 dark:text-gray-400 text-xs"> · {{ formatTimestamp(comment.created_at) }}</span>
             </div>
-            <div v-if="authStore.user && authStore.user.id === comment.user_id" class="flex items-center gap-2">
+            <div v-if="authStore.user && authStore.user.id === comment.user_id" class="flex items-center gap-1">
+              <!-- Edit Button - Icon only -->
               <button
                 type="button"
-                class="inline-flex items-center gap-1.5 rounded-full border border-blue-200 bg-blue-50 px-2.5 py-1 text-[11px] font-semibold text-blue-600 transition hover:border-blue-300 hover:bg-blue-100 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-200"
+                class="p-1.5 rounded-lg text-gray-400 hover:text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-900/30 transition-all"
                 @click="isEditing = true"
+                title="Edit comment"
               >
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="m16.862 3.487 3.651 3.651m-9.546 3.178 3.652 3.651m-7.547 2.717 4.16-1.04a2 2 0 0 0 .975-.544l7.3-7.3a1 1 0 0 0 0-1.414l-3.652-3.651a1 1 0 0 0-1.414 0l-7.3 7.3a2 2 0 0 0-.544.975l-1.04 4.16a1 1 0 0 0 1.214 1.214Z" />
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
                 </svg>
-                Edit
               </button>
+              <!-- Delete Button - Icon only -->
               <button
                 type="button"
-                class="inline-flex items-center gap-1.5 rounded-full border border-rose-200 bg-rose-50 px-2.5 py-1 text-[11px] font-semibold text-rose-600 transition hover:border-rose-300 hover:bg-rose-100 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-rose-200"
+                class="p-1.5 rounded-lg text-gray-400 hover:text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-900/30 transition-all"
                 @click="$emit('delete-comment', comment.id)"
+                title="Delete comment"
               >
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 3.75h6m4.5 3h-15m12 0-.8 11.2a2 2 0 0 1-2 1.8H9.3a2 2 0 0 1-2-1.8L6.5 6.75m3 4.5v6m4-6v6" />
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
                 </svg>
-                Delete
               </button>
             </div>
           </div>
           <p class="mt-1 text-gray-700 dark:text-gray-300 text-sm">{{ comment.content }}</p>
+          
+          <!-- Comment Image - Smaller thumbnail -->
+          <div v-if="commentImages.length > 0" class="mt-2">
+            <a 
+              v-for="(image, idx) in commentImages" 
+              :key="idx"
+              :href="image" 
+              target="_blank"
+              class="inline-block"
+            >
+              <img 
+                :src="image" 
+                :alt="`Comment image ${idx + 1}`"
+                class="max-w-[200px] max-h-[150px] rounded-lg border border-gray-200 dark:border-gray-600 object-cover cursor-pointer hover:opacity-90 transition"
+              />
+            </a>
+          </div>
+          
+          <!-- Reactions -->
+          <div class="mt-2">
+            <ReactionButton
+              reactionable-type="comment"
+              :reactionable-id="comment.id"
+              :user-reaction="comment.user_reaction"
+              :reactions-count="comment.reactions_count || 0"
+              :reactions-summary="comment.reactions_summary || {}"
+            />
+          </div>
         </div>
       </div>
     </div>
@@ -61,14 +91,15 @@
 </template>
 
 <script setup>
-import { ref } from 'vue';
+import { ref, computed } from 'vue';
 import { useAuthStore } from '../../stores/auth';
 import EditCommentForm from './EditCommentForm.vue';
+import ReactionButton from '../UI/ReactionButton.vue';
 
 const authStore = useAuthStore();
 const isEditing = ref(false);
 
-defineProps({
+const props = defineProps({
   comment: {
     type: Object,
     required: true,
@@ -76,6 +107,19 @@ defineProps({
 });
 
 defineEmits(['delete-comment', 'update-comment']);
+
+// Computed property to get comment images
+const commentImages = computed(() => {
+  // Handle multiple images if media_urls array exists
+  if (props.comment.media_urls && props.comment.media_urls.length > 0) {
+    return props.comment.media_urls;
+  }
+  // Fallback to single image_url
+  if (props.comment.image_url) {
+    return [props.comment.image_url];
+  }
+  return [];
+});
 
 const formatTimestamp = (timestamp) => {
   return new Date(timestamp).toLocaleDateString("en-US", {

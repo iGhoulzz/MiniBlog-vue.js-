@@ -2,7 +2,7 @@
 
 namespace App\Http\Controllers;
 
-use Illuminate\Http\Request;
+use App\Http\Requests\StoreMessageRequest;
 use App\Models\Conversation;
 use App\Models\Message;
 use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
@@ -12,12 +12,10 @@ class MessageController extends Controller
 {
     use AuthorizesRequests;
 
-    public function store (Request $request, Conversation $conversation)
+    public function store (StoreMessageRequest $request, Conversation $conversation)
     {
         $this->authorize ('view', $conversation);
-        $attributes = $request->validate ([
-            'content' => 'required|string|min:1|max:1000',
-        ]);
+        $attributes = $request->validated();
         $request->user()->id;
         $message = Message::create ([
             'content' => $attributes['content'],
@@ -29,13 +27,5 @@ class MessageController extends Controller
         return response()->json($message, 201);
 
     }
-
-
-
-
-
-
-
-
 
 }

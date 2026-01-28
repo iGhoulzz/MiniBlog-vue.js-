@@ -2,7 +2,7 @@
   <div ref="rootRef" class="relative" v-if="authStore.user">
     <button
       type="button"
-      class="relative inline-flex items-center justify-center w-10 h-10 rounded-full bg-blue-50 text-blue-600 hover:bg-blue-100 transition-colors"
+      class="relative inline-flex items-center justify-center w-10 h-10 rounded-full bg-blue-50 dark:bg-gray-700 text-blue-600 dark:text-gray-300 hover:bg-blue-100 dark:hover:bg-gray-600 transition-colors"
       aria-label="Open chat"
       @click="toggleDropdown"
     >
@@ -106,6 +106,10 @@ const toggleDropdown = async () => {
     await chatStore.fetchConversations();
   }
   isOpen.value = !isOpen.value;
+  if (isOpen.value) {
+    // Emit event to close other dropdowns
+    window.dispatchEvent(new CustomEvent('dropdown-opened', { detail: 'chat' }));
+  }
 };
 
 const refreshConversations = () => {
@@ -126,12 +130,21 @@ const handleClickOutside = (event) => {
   }
 };
 
+// Listen for other dropdowns opening
+const handleOtherDropdownOpened = (event) => {
+  if (event.detail !== 'chat') {
+    isOpen.value = false;
+  }
+};
+
 onMounted(() => {
   document.addEventListener('click', handleClickOutside);
+  window.addEventListener('dropdown-opened', handleOtherDropdownOpened);
 });
 
 onBeforeUnmount(() => {
   document.removeEventListener('click', handleClickOutside);
+  window.removeEventListener('dropdown-opened', handleOtherDropdownOpened);
 });
 
 const conversationTitle = (conversation) => chatStore.conversationTitle(conversation);
