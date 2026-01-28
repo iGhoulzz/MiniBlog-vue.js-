@@ -14,9 +14,25 @@ class UserController extends Controller
 
     public function apiShowUser(User $user)
     {
-        $posts = Post::with(['user:id,name', 'comments.user:id,name'])
+        $userId = auth('sanctum')->id();
+        
+        $posts = Post::with(['media', 'user:id,name', 'comments.user:id,name', 'reactions'])
+            ->withCount(['comments', 'reactions'])
             ->where('user_id', $user->id)
+            ->latest()
             ->get();
+        
+        // Add reaction data to each post (same as PostController)
+        $posts->each(function($post) use ($userId) {
+            $post->user_reaction = $userId 
+                ? $post->reactions->where('user_id', $userId)->first()?->type
+                : null;
+            
+            $post->reactions_summary = $post->reactions
+                ->groupBy('type')
+                ->map(fn($group) => $group->count());
+        });
+
         return response()->json([
             'user' => $user->makeHidden(['email']),
             'posts' => $posts,
