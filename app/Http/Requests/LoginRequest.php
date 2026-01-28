@@ -8,6 +8,9 @@ class LoginRequest extends FormRequest
 {
     /**
      * Determine if the user is authorized to make this request.
+     * 
+     * Returns true because login is publicly accessible.
+     * Authentication is validated in the controller after credentials are verified.
      */
     public function authorize(): bool
     {

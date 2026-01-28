@@ -207,7 +207,7 @@ const fetchNotifications = async () => {
 
 const markAllAsRead = async () => {
     try {
-        await api.post("/notifications/read-all");
+        await api.patch("/notifications/read-all");
         notifications.value = notifications.value.map((n) => ({
             ...n,
             read_at: new Date().toISOString(),
@@ -222,7 +222,7 @@ const handleNotificationClick = async (notification) => {
     // Mark as read
     if (!notification.read_at) {
         try {
-            await api.post(`/notifications/${notification.id}/read`);
+            await api.patch(`/notifications/${notification.id}/read`);
             notification.read_at = new Date().toISOString();
             unreadCount.value = Math.max(0, unreadCount.value - 1);
         } catch (error) {

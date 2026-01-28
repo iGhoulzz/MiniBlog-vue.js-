@@ -16,7 +16,6 @@ class MessageController extends Controller
     {
         $this->authorize ('view', $conversation);
         $attributes = $request->validated();
-        $request->user()->id;
         $message = Message::create ([
             'content' => $attributes['content'],
             'conversation_id' => $conversation->id,

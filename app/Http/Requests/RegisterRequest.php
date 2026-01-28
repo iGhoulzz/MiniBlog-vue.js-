@@ -8,6 +8,8 @@ class RegisterRequest extends FormRequest
 {
     /**
      * Determine if the user is authorized to make this request.
+     * 
+     * Returns true because registration is publicly accessible.
      */
     public function authorize(): bool
     {
@@ -22,7 +24,7 @@ class RegisterRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'name' => 'required',
+            'name' => 'required|string|min:3|max:50',
             'email' => 'required|email|unique:users,email',
             'password' => 'required|min:8|confirmed',
         ];

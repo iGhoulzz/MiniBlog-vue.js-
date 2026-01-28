@@ -36,12 +36,11 @@ Route::middleware('auth:sanctum')->group(function () {
     });
     Route::get('/users/{user}', [UserController::class, 'apiShowUser']);
     Route::patch('/users/{user}', [UserController::class, 'apiUpdateUser']);
-    Route::post('/users/{user}', [UserController::class, 'apiUpdateUser']);
 
     Route::get('/conversations', [ConversationController::class, 'index']);
     Route::post('/conversations', [ConversationController::class, 'store']);
     Route::get('/conversations/{conversation}', [ConversationController::class, 'show']);
-    Route::post('/conversations/{conversation}/read', [ConversationController::class, 'markAsRead']);
+    Route::patch('/conversations/{conversation}/read', [ConversationController::class, 'markAsRead']);
     Route::delete('/conversations/{conversation}', [ConversationController::class, 'destroy']);
 
     Route::post('/conversations/{conversation}/messages', [MessageController::class, 'store']);
@@ -50,7 +49,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/react', [ReactionController::class, 'react']);
 
     Route::get('/notifications', [NotificationController::class, 'index']);
-    Route::post('/notifications/{id}/read', [NotificationController::class, 'markAsRead']);
-    Route::post('/notifications/read-all', [NotificationController::class, 'markAllAsRead']);
+    Route::patch('/notifications/{id}/read', [NotificationController::class, 'markAsRead']);
+    Route::patch('/notifications/read-all', [NotificationController::class, 'markAllAsRead']);
 
 });

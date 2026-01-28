@@ -8,6 +8,9 @@ class UpdateUserRequest extends FormRequest
 {
     /**
      * Determine if the user is authorized to make this request.
+     * 
+     * Returns true here as the authorization check is done in the controller
+     * using the $this->authorize('update', $user) call with the UserPolicy.
      */
     public function authorize(): bool
     {
@@ -22,7 +25,7 @@ class UpdateUserRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'name' => 'required|string|min:3|max:10',
+            'name' => 'required|string|min:3|max:50',
             'avatar' => 'nullable|image|mimes:jpg,jpeg,png,webp|max:3072',
             'remove_avatar' => 'nullable|boolean',
         ];

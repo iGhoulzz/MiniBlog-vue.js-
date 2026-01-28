@@ -8,6 +8,9 @@ class UpdateCommentRequest extends FormRequest
 {
     /**
      * Determine if the user is authorized to make this request.
+     * 
+     * Returns true here as the authorization check is done in the controller
+     * using the CommentPolicy to verify ownership.
      */
     public function authorize(): bool
     {

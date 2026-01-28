@@ -11,6 +11,12 @@ class ReactRequest extends FormRequest
 {
     use HasReactionEmojis;
 
+    /**
+     * Determine if the user is authorized to make this request.
+     * 
+     * Returns true because authorization is handled by auth:sanctum middleware.
+     * All authenticated users can react to posts and comments.
+     */
     public function authorize(): bool
     {
         return true;

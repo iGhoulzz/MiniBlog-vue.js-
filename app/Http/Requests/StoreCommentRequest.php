@@ -8,6 +8,9 @@ class StoreCommentRequest extends FormRequest
 {
     /**
      * Determine if the user is authorized to make this request.
+     * 
+     * Returns true because authorization is handled by auth:sanctum middleware.
+     * All authenticated users can create comments.
      */
     public function authorize(): bool
     {

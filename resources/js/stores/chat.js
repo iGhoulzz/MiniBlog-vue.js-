@@ -999,7 +999,7 @@ export const useChatStore = defineStore('chat', () => {
     if (Number.isNaN(id)) return;
 
     try {
-      const { data } = await api.post(`/conversations/${id}/read`);
+      const { data } = await api.patch(`/conversations/${id}/read`);
       const updatedMessageIds = Array.isArray(data?.message_ids) ? data.message_ids : [];
       if (updatedMessageIds.length) {
         applyReadReceipts(id, updatedMessageIds, data?.read_at, authStore.user);
