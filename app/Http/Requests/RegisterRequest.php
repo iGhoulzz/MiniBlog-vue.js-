@@ -8,6 +8,8 @@ class RegisterRequest extends FormRequest
 {
     /**
      * Determine if the user is authorized to make this request.
+     * 
+     * Returns true because registration is publicly accessible.
      */
     public function authorize(): bool
     {

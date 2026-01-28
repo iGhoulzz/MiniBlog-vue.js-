@@ -49,6 +49,10 @@ class ReactionController extends Controller
     {
         $modelClass = $request->getModelClass();
         $reactionable = $modelClass::find($request->reactionable_id);
+        
+        if (!$reactionable) {
+            return response()->json(['message' => 'Resource not found'], 404);
+        }
 
         $existingReaction = Reaction::where('user_id', auth()->id())
             ->where('reactionable_type', $modelClass)
@@ -93,6 +97,11 @@ class ReactionController extends Controller
     private function notifyOwner($reactionable, $reactionType, $reactionableType)
     {
         $owner = $reactionable->user;
+        
+        // Skip notification if owner doesn't exist
+        if (!$owner) {
+            return;
+        }
 
         // Don't notify if reacting to your own content
         if ($owner->id === auth()->id()) {

@@ -8,6 +8,9 @@ class StoreMessageRequest extends FormRequest
 {
     /**
      * Determine if the user is authorized to make this request.
+     * 
+     * Returns true here as the authorization check is done in the controller
+     * using the $this->authorize('view', $conversation) call with the ConversationPolicy.
      */
     public function authorize(): bool
     {

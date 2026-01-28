@@ -36,6 +36,8 @@ class ConversationController extends Controller
                 $user = $request->user();
 
                 $newConversation = Conversation::create();
+                // Automatically include the conversation creator in the participant list
+                // This ensures the creator is always part of their own conversations
                 $userIds = array_unique(array_merge([$request->user()->id], $attributes['user_ids']));
                 $newConversation->users()->attach($userIds);
 
