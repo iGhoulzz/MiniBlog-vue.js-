@@ -40,7 +40,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/conversations', [ConversationController::class, 'index']);
     Route::post('/conversations', [ConversationController::class, 'store']);
     Route::get('/conversations/{conversation}', [ConversationController::class, 'show']);
-    Route::put('/conversations/{conversation}/read', [ConversationController::class, 'markAsRead']);
+    Route::patch('/conversations/{conversation}/read', [ConversationController::class, 'markAsRead']);
     Route::delete('/conversations/{conversation}', [ConversationController::class, 'destroy']);
 
     Route::post('/conversations/{conversation}/messages', [MessageController::class, 'store']);
