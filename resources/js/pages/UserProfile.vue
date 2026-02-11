@@ -18,7 +18,7 @@
                 <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
                 </svg>
-                {{ posts.length }} {{ posts.length === 1 ? 'Post' : 'Posts' }}
+                {{ postsCount }} {{ postsCount === 1 ? 'Post' : 'Posts' }}
               </span>
             </div>
           </div>
@@ -58,9 +58,28 @@
         :key="post.id"
         :post="post"
         @delete-post="handleDeletePost"
-        @comment-added="fetchUserProfile"
-        @comment-deleted="fetchUserProfile"
+        @comment-added="handleCommentAdded"
+        @comment-deleted="handleCommentDeleted"
       />
+
+      <!-- Infinite Scroll Sentinel -->
+      <div ref="scrollSentinel" class="h-4"></div>
+
+      <!-- Loading Spinner -->
+      <div v-if="isLoadingMore" class="text-center py-4">
+        <div class="inline-flex items-center gap-2 text-gray-500 dark:text-gray-400">
+          <svg class="animate-spin h-5 w-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path>
+          </svg>
+          <span class="text-sm">Loading more posts...</span>
+        </div>
+      </div>
+
+      <div v-if="!nextCursor && posts.length > 0 && !isLoadingMore" class="text-center py-4">
+        <p class="text-gray-400 dark:text-gray-500 text-sm">No more posts to show.</p>
+      </div>
+
       <div v-if="posts.length === 0" class="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-md text-center transition-colors duration-300">
         <p class="text-gray-500 dark:text-gray-400">{{ user.name }} has not posted anything yet.</p>
       </div>
@@ -75,7 +94,7 @@
 </template>
 
 <script setup>
-import { ref, onMounted, watch, computed } from 'vue';
+import { ref, onMounted, onUnmounted, watch, computed } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import { useAuthStore } from '../stores/auth.js';
 import api from '../services/api.js';
@@ -89,6 +108,11 @@ const authStore = useAuthStore();
 const chatStore = useChatStore();
 const user = ref(null);
 const posts = ref([]);
+const postsCount = ref(0);
+const nextCursor = ref(null);
+const isLoadingMore = ref(false);
+const scrollSentinel = ref(null);
+let observer = null;
 const error = ref('');
 const notificationStore = useNotificationStore();
 
@@ -101,13 +125,31 @@ const fetchUserProfile = async () => {
     const userId = route.params.id;
     const response = await api.get(`/users/${userId}`);
     user.value = response.data.user;
-    posts.value = response.data.posts;
+    posts.value = response.data.posts.data || [];
+    postsCount.value = response.data.posts_count || 0;
+    nextCursor.value = response.data.posts.next_cursor || null;
     error.value = '';
   } catch (err) {
     console.error('Error fetching user profile:', err);
     error.value = 'Could not load user profile. The user may not exist.';
     user.value = null;
     posts.value = [];
+  }
+};
+
+const loadMorePosts = async () => {
+  if (!nextCursor.value) return;
+  try {
+    isLoadingMore.value = true;
+    const userId = route.params.id;
+    const response = await api.get(`/users/${userId}`, { params: { cursor: nextCursor.value } });
+    const newPosts = response.data.posts.data || [];
+    posts.value = [...posts.value, ...newPosts];
+    nextCursor.value = response.data.posts.next_cursor || null;
+  } catch (err) {
+    console.error('Error loading more posts:', err);
+  } finally {
+    isLoadingMore.value = false;
   }
 };
 
@@ -118,10 +160,25 @@ const handleDeletePost = async (postId) => {
   try {
     const response = await api.delete(`/posts/${postId}`);
     posts.value = posts.value.filter(post => post.id !== postId);
+    postsCount.value = Math.max(0, postsCount.value - 1);
     notificationStore.showNotification({ message: response.data.message });
   } catch (err) {
     console.error('Error deleting post:', err);
     notificationStore.showNotification({ message: 'Error deleting post.', type: 'error' });
+  }
+};
+
+const handleCommentAdded = (postId) => {
+  const post = posts.value.find(p => p.id === postId);
+  if (post) {
+    post.comments_count = (post.comments_count || 0) + 1;
+  }
+};
+
+const handleCommentDeleted = (postId) => {
+  const post = posts.value.find(p => p.id === postId);
+  if (post && post.comments_count > 0) {
+    post.comments_count -= 1;
   }
 };
 
@@ -132,12 +189,33 @@ const startDirectMessage = () => {
   chatStore.openDmWith(user.value);
 };
 
-onMounted(fetchUserProfile);
+const setupObserver = () => {
+  if (observer) observer.disconnect();
+  observer = new IntersectionObserver((entries) => {
+    if (entries[0].isIntersecting && nextCursor.value && !isLoadingMore.value) {
+      loadMorePosts();
+    }
+  }, { rootMargin: '200px' });
+  const checkSentinel = setInterval(() => {
+    if (scrollSentinel.value) {
+      observer.observe(scrollSentinel.value);
+      clearInterval(checkSentinel);
+    }
+  }, 100);
+};
+
+onMounted(() => {
+  fetchUserProfile().then(setupObserver);
+});
+
+onUnmounted(() => {
+  if (observer) observer.disconnect();
+});
 
 // Watch for route changes to refetch data if navigating between user profiles
 watch(() => route.params.id, (newId, oldId) => {
   if (newId !== oldId) {
-    fetchUserProfile();
+    fetchUserProfile().then(setupObserver);
   }
 });
 </script>

@@ -88,11 +88,29 @@
         :key="post.id"
         :post="post"
         @delete-post="handleDeletePost"
-        @comment-added="fetchPosts"
-        @comment-deleted="fetchPosts"
+        @comment-added="handleCommentAdded"
+        @comment-deleted="handleCommentDeleted"
       />
 
-      <div v-if="posts.length === 0" class="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-md text-center transition-colors duration-300">
+      <!-- Infinite Scroll Sentinel -->
+      <div ref="scrollSentinel" class="h-4"></div>
+
+      <!-- Loading Spinner -->
+      <div v-if="isLoadingMore" class="text-center py-4">
+        <div class="inline-flex items-center gap-2 text-gray-500 dark:text-gray-400">
+          <svg class="animate-spin h-5 w-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path>
+          </svg>
+          <span class="text-sm">Loading more posts...</span>
+        </div>
+      </div>
+
+      <div v-if="!nextCursor && posts.length > 0 && !isLoadingMore" class="text-center py-4">
+        <p class="text-gray-400 dark:text-gray-500 text-sm">You've reached the end of the feed.</p>
+      </div>
+
+      <div v-if="posts.length === 0 && !isLoadingMore" class="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-md text-center transition-colors duration-300">
         <p class="text-gray-500 dark:text-gray-400">No posts yet. Be the first to share something!</p>
       </div>
     </div>
@@ -100,7 +118,7 @@
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue';
+import { ref, onMounted, onUnmounted } from 'vue';
 import { useRouter } from 'vue-router';
 import { useAuthStore } from '../stores/auth.js';
 import { useNotificationStore } from '../stores/notification';
@@ -115,29 +133,84 @@ const posts = ref([]);
 const newPostContent = ref('');
 const postError = ref('');
 const isCreating = ref(false);
+const isLoadingMore = ref(false);
+const nextCursor = ref(null);
+const scrollSentinel = ref(null);
+let observer = null;
 const selectedImages = ref([]);
 const fileInput = ref(null);
 const router = useRouter();
 const authStore = useAuthStore();
 const notificationStore = useNotificationStore();
 
-// --- 2. BEHAVIOR: Fetch All Posts ---
-const fetchPosts = async () => {
+// --- 2. BEHAVIOR: Fetch Posts (paginated, appends) ---
+const fetchPosts = async (reset = false) => {
   if (authStore.token) {
     try {
-      const response = await api.get('/posts');
-      posts.value = response.data;
+      isLoadingMore.value = true;
+      const params = {};
+      if (!reset && nextCursor.value) {
+        params.cursor = nextCursor.value;
+      }
+      if (reset) {
+        posts.value = [];
+        nextCursor.value = null;
+      }
+      const response = await api.get('/posts', { params });
+      const newPosts = response.data.data || [];
+      posts.value = [...posts.value, ...newPosts];
+      nextCursor.value = response.data.next_cursor || null;
     } catch (error) {
       console.error('Error fetching posts:', error);
       if (error.response && (error.response.status === 401 || error.response.status === 403)) {
         authStore.logout();
         router.push('/auth/login');
       }
+    } finally {
+      isLoadingMore.value = false;
     }
   }
 };
 
-onMounted(fetchPosts);
+onMounted(() => {
+  fetchPosts(true);
+
+  // Set up Intersection Observer for infinite scroll
+  observer = new IntersectionObserver((entries) => {
+    if (entries[0].isIntersecting && nextCursor.value && !isLoadingMore.value) {
+      fetchPosts();
+    }
+  }, { rootMargin: '200px' });
+
+  // Watch for sentinel to become available
+  const checkSentinel = setInterval(() => {
+    if (scrollSentinel.value) {
+      observer.observe(scrollSentinel.value);
+      clearInterval(checkSentinel);
+    }
+  }, 100);
+});
+
+onUnmounted(() => {
+  if (observer) {
+    observer.disconnect();
+  }
+});
+
+// --- Local event handlers (avoid full refetch) ---
+const handleCommentAdded = (postId) => {
+  const post = posts.value.find(p => p.id === postId);
+  if (post) {
+    post.comments_count = (post.comments_count || 0) + 1;
+  }
+};
+
+const handleCommentDeleted = (postId) => {
+  const post = posts.value.find(p => p.id === postId);
+  if (post && post.comments_count > 0) {
+    post.comments_count -= 1;
+  }
+};
 
 // --- 3. BEHAVIOR: Handle Image Selection ---
 const handleFileSelect = (event) => {
@@ -213,7 +286,8 @@ const handleCreatePost = async () => {
     selectedImages.value = [];
     
     notificationStore.showNotification({ message: response.data.message });
-    await fetchPosts(); // Refetch posts to show the new one
+    // Reset and refetch to show the new post at the top
+    await fetchPosts(true);
   } catch (error) {
     if (error.response && error.response.data.errors) {
       const errors = error.response.data.errors;

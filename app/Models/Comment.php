@@ -3,15 +3,16 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use App\Traits\HasFile;
 use Illuminate\Support\Facades\Storage;
 
 class Comment extends Model
 {
-    use HasFile;
+    use HasFactory, HasFile;
 
     protected $fillable = ['content', 'user_id', 'post_id'];
-    
+
     protected $appends = ['image_url'];
 
     public function getImageUrlAttribute()

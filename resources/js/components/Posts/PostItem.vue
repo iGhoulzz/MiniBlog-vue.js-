@@ -296,7 +296,7 @@ const handleCreateComment = async () => {
     removeCommentImage();
     
     await fetchComments(); // Refetch comments to show the new one
-    emit('comment-added'); // Notify parent to update count
+    emit('comment-added', props.post.id); // Notify parent to update count
   } catch (error) {
     if (error.response && error.response.data.errors) {
       const errors = error.response.data.errors;
@@ -322,7 +322,7 @@ const handleDeleteComment = async (commentId) => {
   try {
     await api.delete(`/comments/${commentId}`);
     await fetchComments(); // Refetch comments
-    emit('comment-deleted'); // Notify parent to update count
+    emit('comment-deleted', props.post.id); // Notify parent to update count
   } catch (error) {
     console.error('Error deleting comment:', error);
   }

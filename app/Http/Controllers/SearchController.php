@@ -15,10 +15,14 @@ class SearchController extends Controller
             'q' => 'required|string|max:255',
         ]);
         $query = $request->input('q', '');
-        $users = User::where('name', 'like', "%$query%")->get();
-        $posts = Post::with('user','comments.user', 'media','reactions', 'reactions.user')
-            ->withCount('comments','reactions')->where('content', 'like', "%$query%")
+        $users = User::with('media')
+            ->where('name', 'like', "%$query%")
+            ->take(20)
             ->get();
+        $posts = Post::with('user','user.media','comments.user', 'comments.user.media', 'comments.media', 'media','reactions', 'reactions.user')
+            ->withCount('comments','reactions')->where('content', 'like', "%$query%")
+            ->latest()
+            ->cursorPaginate(15);
 
             return response()->json([
                 'users' => $users,
@@ -36,7 +40,7 @@ class SearchController extends Controller
         $messages = Message::participant($userId)
             ->with('conversation', 'user')
             ->where('content', 'like', "%$query%")
-            ->latest()->get();
+            ->latest()->cursorPaginate(20);
 
             return response()->json([
                 'messages' => $messages,

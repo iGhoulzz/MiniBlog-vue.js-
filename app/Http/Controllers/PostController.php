@@ -17,10 +17,10 @@ class PostController extends Controller
 
     $userId = auth('sanctum')->id();
 
-    $posts = Post::with(['media' , 'user:id,name', 'comments.user:id,name', 'reactions'])
-    ->withCount(['comments', 'reactions'])->latest()->get();
+    $posts = Post::with(['media' , 'user:id,name,email', 'user.media', 'comments.user:id,name', 'comments.user.media', 'comments.media', 'reactions'])
+    ->withCount(['comments', 'reactions'])->latest()->cursorPaginate(15);
 
-    $posts->each(function($post) use ($userId) {
+    $posts->getCollection()->each(function($post) use ($userId) {
         $post->user_reaction = $post->reactions
             ->where('user_id', $userId)
             ->first()
@@ -72,26 +72,18 @@ class PostController extends Controller
     {
         $userId = auth('sanctum')->id();
 
-        $post->load(['media', 'user:id,name', 'comments.user:id,name']);
+        $post->load(['media', 'user:id,name', 'user.media', 'comments.user:id,name', 'comments.user.media', 'comments.media', 'comments.reactions', 'reactions']);
 
-        // Add post reaction data
-        $userReaction = $post->reactions()->where('user_id', $userId)->first();
-        $post->user_reaction = $userReaction?->type;
-        $post->reactions_summary = $post->reactions()
-            ->selectRaw('type, COUNT(*) as count')
-            ->groupBy('type')
-            ->pluck('count', 'type');
-        $post->reactions_count = $post->reactions()->count();
+        // Add post reaction data (from eager-loaded collection)
+        $post->user_reaction = $post->reactions->where('user_id', $userId)->first()?->type;
+        $post->reactions_summary = $post->reactions->countBy('type');
+        $post->reactions_count = $post->reactions->count();
 
-        // Add comment reaction data
+        // Add comment reaction data (from eager-loaded collection — no N+1)
         $post->comments->transform(function ($comment) use ($userId) {
-            $commentReaction = $comment->reactions()->where('user_id', $userId)->first();
-            $comment->user_reaction = $commentReaction?->type;
-            $comment->reactions_summary = $comment->reactions()
-                ->selectRaw('type, COUNT(*) as count')
-                ->groupBy('type')
-                ->pluck('count', 'type');
-            $comment->reactions_count = $comment->reactions()->count();
+            $comment->user_reaction = $comment->reactions->where('user_id', $userId)->first()?->type;
+            $comment->reactions_summary = $comment->reactions->countBy('type');
+            $comment->reactions_count = $comment->reactions->count();
             return $comment;
         });
 

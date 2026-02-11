@@ -20,23 +20,19 @@ class ReactionController extends Controller
 
         $modelClass = $request->reactionable_type === 'post' ? Post::class : Comment::class;
 
-        $reactions = Reaction::with(['user:id,name', 'user.media'])
+        // Fetch ALL reactions for this item in one query (for summary + count)
+        $allReactions = Reaction::with(['user:id,name', 'user.media'])
             ->where('reactionable_type', $modelClass)
             ->where('reactionable_id', $request->reactionable_id)
-            ->when($request->type, function ($query) use ($request) {
-                $query->where('type', $request->type);
-            })
             ->get();
 
-        $reactions_summary = Reaction::where('reactionable_type', $modelClass)
-            ->where('reactionable_id', $request->reactionable_id)
-            ->selectRaw('type, COUNT(*) as count')
-            ->groupBy('type')
-            ->pluck('count', 'type');
+        $reactions_summary = $allReactions->countBy('type');
+        $reactions_count = $allReactions->count();
 
-        $reactions_count = Reaction::where('reactionable_type', $modelClass)
-            ->where('reactionable_id', $request->reactionable_id)
-            ->count();
+        // If filtering by type, filter the collection (no extra query)
+        $reactions = $request->type
+            ? $allReactions->where('type', $request->type)->values()
+            : $allReactions;
 
         return response()->json([
             'reactions' => $reactions,

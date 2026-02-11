@@ -3,13 +3,14 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use App\Traits\HasFile;
 use Illuminate\Support\Facades\Storage;
 
 
 class Post extends Model
 {
-    use HasFile;
+    use HasFactory, HasFile;
 
     protected $fillable = ['content', 'user_id'];
 
@@ -40,7 +41,7 @@ class Post extends Model
     public function getUserReactionAttribute()
     {
         $userId = auth('sanctum')->id();
-        
+
         if (!$userId) {
             return null;
         }
