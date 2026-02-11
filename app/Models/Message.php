@@ -9,6 +9,8 @@ class Message extends Model
 {
     protected $fillable = ['content', 'conversation_id', 'user_id'];
 
+    protected $touches = ['conversation'];
+
     protected $appends = ['read_by'];
 
     public function conversation()
@@ -21,11 +23,24 @@ class Message extends Model
         return $this->belongsTo(User::class);
     }
 
+    public function hiddenByUsers()
+    {
+        return $this->belongsToMany(User::class, 'hidden_messages')
+                    ->withTimestamps();
+    }
+
     public function readByUsers()
     {
         return $this->belongsToMany(User::class, 'message_user')
 
                     ->withTimestamps();
+    }
+
+    public function scopeParticipant($query, $userId)
+    {
+        return $query->whereHas('conversation.users', function ($q) use ($userId) {
+            $q->where('users.id', $userId);
+        });
     }
 
     public function getReadByAttribute(): array

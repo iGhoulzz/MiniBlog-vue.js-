@@ -27,4 +27,14 @@ class MessageController extends Controller
 
     }
 
+    public function destroy(Message $message)
+    {
+        // Don't actually delete the record, just hide it for this user
+        // We use 'syncWithoutDetaching' to add it to the hidden list
+        // which prevents duplicates if they try to delete it twice
+        request()->user()->hiddenMessages()->syncWithoutDetaching([$message->id]);
+
+        return response()->json(null, 204);
+    }
+
 }

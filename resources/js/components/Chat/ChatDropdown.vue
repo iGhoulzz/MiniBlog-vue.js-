@@ -83,6 +83,17 @@
             </button>
           </li>
         </ul>
+
+        <!-- Show All Messages Footer -->
+        <div class="border-t border-gray-100 dark:border-gray-700">
+          <button
+            type="button"
+            class="w-full px-4 py-3 text-center text-sm font-semibold text-blue-600 dark:text-blue-400 hover:bg-gray-50 dark:hover:bg-gray-700/50 transition"
+            @click="handleShowAll"
+          >
+            Show All Messages
+          </button>
+        </div>
       </div>
     </transition>
   </div>
@@ -90,11 +101,13 @@
 
 <script setup>
 import { computed, onBeforeUnmount, onMounted, ref } from 'vue';
+import { useRouter } from 'vue-router';
 import { useAuthStore } from '../../stores/auth';
 import { useChatStore } from '../../stores/chat';
 
 const authStore = useAuthStore();
 const chatStore = useChatStore();
+const router = useRouter();
 const isOpen = ref(false);
 const rootRef = ref(null);
 
@@ -119,6 +132,11 @@ const refreshConversations = () => {
 const handleSelectConversation = async (conversationId) => {
   await chatStore.openConversation(conversationId);
   isOpen.value = false;
+};
+
+const handleShowAll = () => {
+  isOpen.value = false;
+  router.push({ name: 'Messages' });
 };
 
 const handleClickOutside = (event) => {

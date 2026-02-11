@@ -84,13 +84,33 @@
           <div
             v-for="message in messages"
             :key="message.id ?? message.created_at"
-            class="flex"
+            class="flex group relative"
             :class="[message.user_id === authStore.user?.id ? 'justify-end' : 'justify-start']"
           >
             <div
-              class="max-w-[90%] rounded-2xl px-4 py-2 text-sm shadow-sm"
+              class="max-w-[90%] rounded-2xl px-4 py-2 text-sm shadow-sm cursor-pointer relative"
               :class="message.user_id === authStore.user?.id ? 'bg-blue-600 text-white' : 'bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-gray-100'"
+              @click="toggleMessageMenu(message.id)"
             >
+              <!-- Delete button popup -->
+              <div
+                v-if="selectedMessageId === message.id"
+                class="absolute z-10 bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-200 dark:border-gray-600 py-1 px-1"
+                :class="message.user_id === authStore.user?.id ? 'right-full mr-2 top-0' : 'left-full ml-2 top-0'"
+              >
+                <button
+                  type="button"
+                  class="flex items-center gap-2 px-3 py-1.5 text-xs text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-900/20 rounded-md transition whitespace-nowrap"
+                  :disabled="isDeleting"
+                  @click.stop="handleDeleteMessage(message.id)"
+                >
+                  <svg xmlns="http://www.w3.org/2000/svg" class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                  </svg>
+                  {{ isDeleting ? 'Deleting...' : 'Delete for me' }}
+                </button>
+              </div>
+
               <p class="whitespace-pre-line break-words">{{ message.content }}</p>
               <div class="text-[11px] mt-2 flex justify-between gap-2 opacity-80">
                 <span>{{ message.user_id === authStore.user?.id ? 'You' : message.user?.name ?? 'User' }}</span>
@@ -187,6 +207,8 @@ const isMinimized = ref(false);
 const messagesContainer = ref(null);
 const isSending = ref(false);
 const isClearing = ref(false);
+const selectedMessageId = ref(null);
+const isDeleting = ref(false);
 
 const isPending = computed(() => props.windowId.startsWith('pending-'));
 const conversation = computed(() =>
@@ -373,6 +395,36 @@ function toggleMinimized(value) {
     if (conversation.value?.id) {
       chatStore.markConversationRead(conversation.value.id);
     }
+  }
+}
+
+function toggleMessageMenu(messageId) {
+  if (selectedMessageId.value === messageId) {
+    selectedMessageId.value = null;
+  } else {
+    selectedMessageId.value = messageId;
+  }
+}
+
+async function handleDeleteMessage(messageId) {
+  if (!conversation.value?.id || isDeleting.value) return;
+
+  isDeleting.value = true;
+  try {
+    await chatStore.deleteMessage(conversation.value.id, messageId);
+    selectedMessageId.value = null;
+    notificationStore.showNotification({
+      message: 'Message deleted for you.',
+      type: 'success',
+    });
+  } catch (error) {
+    console.error('Failed to delete message', error);
+    notificationStore.showNotification({
+      message: error.response?.data?.message ?? 'Unable to delete message.',
+      type: 'error',
+    });
+  } finally {
+    isDeleting.value = false;
   }
 }
 </script>

@@ -25,7 +25,7 @@
       <div
         v-if="isOpen"
         class="absolute right-0 mt-1 w-56 z-50"
-        @mouseleave="handleMouseLeave"
+        @mouseenter="handleMouseEnter"
       >
         <!-- Padding wrapper to bridge the gap -->
         <div class="pt-2">

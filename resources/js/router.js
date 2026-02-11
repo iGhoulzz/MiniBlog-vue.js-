@@ -7,6 +7,7 @@ import Post from './pages/Post.vue';
 import EditPost from './pages/EditPost.vue';
 import UserProfile from './pages/UserProfile.vue';
 import EditProfile from './pages/EditProfile.vue';
+import Messages from './pages/Messages.vue';
 
 import AuthLayout from './layouts/AuthLayout.vue';
 import DefaultLayout from './layouts/DefaultLayout.vue';
@@ -21,6 +22,7 @@ const routes = [
       { path: 'posts/:id/edit', name: 'EditPost', component: EditPost, meta: { requiresAuth: true } },
       { path: 'users/:id', name: 'UserProfile', component: UserProfile, meta: { requiresAuth: true } },
       { path: 'profile/edit', name: 'EditProfile', component: EditProfile, meta: { requiresAuth: true } },
+      { path: 'messages', name: 'Messages', component: Messages, meta: { requiresAuth: true } },
     ],
   },
   {

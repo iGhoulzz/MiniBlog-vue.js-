@@ -73,7 +73,8 @@ protected $appends = ['avatar_url'];
 
     public function conversations()
     {
-        return $this->belongsToMany(Conversation::class, 'conversation_user');
+        return $this->belongsToMany(Conversation::class, 'conversation_user')
+                    ->withPivot('deleted_at');
     }
 
     public function readMessages()
@@ -83,4 +84,9 @@ protected $appends = ['avatar_url'];
                     ->withTimestamps();
     }
 
+    public function hiddenMessages()
+    {
+        return $this->belongsToMany(Message::class, 'hidden_messages')
+                    ->withTimestamps();
+    }
 }

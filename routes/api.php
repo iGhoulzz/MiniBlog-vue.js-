@@ -11,6 +11,7 @@ use App\Http\Controllers\ConversationController;
 use App\Http\Controllers\MessageController;
 use App\Http\Controllers\ReactionController;
 use App\Http\Controllers\NotificationController;
+use App\Http\Controllers\SearchController;
 
 Route::post('/register', [RegisterController::class, 'apiRegister']);
 Route::post('/login', [LoginController::class, 'apiLogin']);
@@ -44,6 +45,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::delete('/conversations/{conversation}', [ConversationController::class, 'destroy']);
 
     Route::post('/conversations/{conversation}/messages', [MessageController::class, 'store']);
+    Route::delete('/messages/{message}', [MessageController::class, 'destroy']);
 
     Route::get('/reactions', [ReactionController::class, 'index']);
     Route::post('/react', [ReactionController::class, 'react']);
@@ -51,5 +53,8 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/notifications', [NotificationController::class, 'index']);
     Route::patch('/notifications/{id}/read', [NotificationController::class, 'markAsRead']);
     Route::patch('/notifications/read-all', [NotificationController::class, 'markAllAsRead']);
+
+    Route::get('/search', [SearchController::class, 'search']);
+    Route::get('/search/messages', [SearchController::class, 'searchMessages']);
 
 });

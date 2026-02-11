@@ -55,7 +55,7 @@ function playIncomingDmChime() {
     }
 
     if (dmAudioContext.state === 'suspended') {
-      dmAudioContext.resume().catch(() => {});
+      dmAudioContext.resume().catch(() => { });
     }
 
     const oscillator = dmAudioContext.createOscillator();
@@ -513,7 +513,7 @@ export const useChatStore = defineStore('chat', () => {
     try {
       connection.unbind('connected', handleConnected);
       connection.unbind('state_change', handleStateChange);
-    } catch {}
+    } catch { }
 
     connection.bind('connected', handleConnected);
     connection.bind('state_change', handleStateChange);
@@ -546,14 +546,14 @@ export const useChatStore = defineStore('chat', () => {
     try {
       channel.unbind('MessageSent', messageHandler);
       channel.unbind('App\\Events\\MessageSent', messageHandler);
-    } catch {}
+    } catch { }
     try {
       channel.unbind('MessagesRead', readHandler);
       channel.unbind('App\\Events\\MessagesRead', readHandler);
-    } catch {}
+    } catch { }
     try {
       if (channel?.name) realtimeClient.value?.unsubscribe(channel.name);
-    } catch {}
+    } catch { }
 
     realtimeBindings.delete(id);
     subscribedConversationIds.delete(id);
@@ -593,7 +593,7 @@ export const useChatStore = defineStore('chat', () => {
         realtimeClient.value.connection?.unbind('state_change', handleStateChange);
         realtimeClient.value.disconnect();
       }
-    } catch {}
+    } catch { }
     realtimeClient.value = null;
   }
 
@@ -678,7 +678,7 @@ export const useChatStore = defineStore('chat', () => {
       if (binding.channel?.name) {
         realtimeClient.value?.unsubscribe(binding.channel.name);
       }
-    } catch {}
+    } catch { }
 
     userInboxChannel.value = null;
     pendingInboxSubscription = false;
@@ -690,7 +690,7 @@ export const useChatStore = defineStore('chat', () => {
 
     // If not present (rare race), fetch once
     if (!conv) {
-      fetchConversationById(conversationId).catch(() => {});
+      fetchConversationById(conversationId).catch(() => { });
       return;
     }
 
@@ -731,7 +731,7 @@ export const useChatStore = defineStore('chat', () => {
   function handleMessagesRead(conversationId, payload) {
     let conv = getConversationById(conversationId);
     if (!conv) {
-      fetchConversationById(conversationId).catch(() => {});
+      fetchConversationById(conversationId).catch(() => { });
       return;
     }
 
@@ -747,10 +747,10 @@ export const useChatStore = defineStore('chat', () => {
 
     const reader = readerId
       ? {
-          id: readerId,
-          name: payload?.user_name ?? participant?.name ?? null,
-          avatar_url: participant?.avatar_url ?? null,
-        }
+        id: readerId,
+        name: payload?.user_name ?? participant?.name ?? null,
+        avatar_url: participant?.avatar_url ?? null,
+      }
       : null;
 
     applyReadReceipts(conversationId, messageIds, payload?.read_at, reader);
@@ -951,6 +951,21 @@ export const useChatStore = defineStore('chat', () => {
     setDraft(numericId, '');
   }
 
+  async function deleteMessage(conversationId, messageId) {
+    const convId = Number(conversationId);
+    const msgId = Number(messageId);
+    if (Number.isNaN(convId) || Number.isNaN(msgId)) return;
+
+    await api.delete(`/messages/${msgId}`);
+
+    // Remove message from local state
+    const conv = getConversationById(convId);
+    if (conv) {
+      conv.messages = conv.messages.filter((m) => m.id !== msgId);
+      upsertConversation({ ...conv });
+    }
+  }
+
   async function clearConversation(conversationId) {
     const id = Number(conversationId);
     if (Number.isNaN(id)) return;
@@ -990,7 +1005,7 @@ export const useChatStore = defineStore('chat', () => {
 
     inflightReadSyncs.add(id);
     syncConversationRead(id)
-      .catch(() => {})
+      .catch(() => { })
       .finally(() => inflightReadSyncs.delete(id));
   }
 
@@ -1162,6 +1177,7 @@ export const useChatStore = defineStore('chat', () => {
     messageStatus,
 
     sendMessage,
+    deleteMessage,
     clearConversation,
   };
 });

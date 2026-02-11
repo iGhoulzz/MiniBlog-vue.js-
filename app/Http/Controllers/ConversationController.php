@@ -21,8 +21,28 @@ class ConversationController extends Controller
 
         $conversations = $user
             ->conversations()
-            ->with('users', 'messages.user', 'messages.readByUsers')
+            // Only show conversations that haven't been deleted, OR have new messages since deletion
+            ->where(function ($q) {
+                $q->whereNull('conversation_user.deleted_at')
+                  ->orWhereColumn('conversations.updated_at', '>', 'conversation_user.deleted_at');
+            })
+            ->with(['users', 'messages' => function ($query) use ($user) {
+                $query->whereDoesntHave('hiddenByUsers', function ($q) use ($user) {
+                    $q->where('user_id', $user->id);
+                })->with('user', 'readByUsers');
+            }])
             ->get();
+
+        // Filter out messages that were sent before the user "deleted" the chat
+        $conversations->each(function ($conversation) {
+            if ($conversation->pivot->deleted_at) {
+                $conversation->setRelation('messages',
+                    $conversation->messages->filter(function ($message) use ($conversation) {
+                        return $message->created_at > $conversation->pivot->deleted_at;
+                    })->values()
+                );
+            }
+        });
 
         return response()->json($conversations);
     }
@@ -60,15 +80,45 @@ class ConversationController extends Controller
     public function show(Conversation $conversation)
     {
         $this->authorize('view', $conversation);
-        $conversation->load('users', 'messages.user', 'messages.readByUsers');
+
+        $user = request()->user();
+
+        // Get the deletion timestamp for this user if it exists
+        $userPivot = $conversation->users()
+            ->where('user_id', $user->id)
+            ->first()
+            ->pivot;
+
+        $deletedAt = $userPivot ? $userPivot->deleted_at : null;
+
+        $conversation->load(['users', 'messages' => function ($query) use ($user, $deletedAt) {
+            // Hide individual messages deleted by user
+            $query->whereDoesntHave('hiddenByUsers', function ($q) use ($user) {
+                $q->where('user_id', $user->id);
+            });
+
+            // Hide messages created before the chat was "cleared"
+            if ($deletedAt) {
+                $query->where('created_at', '>', $deletedAt);
+            }
+
+            $query->with('user', 'readByUsers');
+        }]);
+
         return response()->json($conversation);
     }
 
 
     public function destroy(Conversation $conversation)
     {
-        $this->authorize('delete', $conversation);
-        $conversation->delete();
+        $this->authorize('view', $conversation);
+
+        // Soft delete the conversation for THIS user only (Clear History)
+        $conversation->users()->updateExistingPivot(
+            request()->user()->id,
+            ['deleted_at' => now()]
+        );
+
         return response()->json(null, 204);
     }
 

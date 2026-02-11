@@ -1,6 +1,9 @@
 <template>
   <div class="space-y-6">
 
+    <!-- Search Bar -->
+    <SearchBar mode="general" />
+
     <!-- Create Post Form -->
     <BaseCard class="mb-8 p-6" v-if="authStore.user">
       <h2 class="text-xl font-bold mb-4 text-gray-800 dark:text-white">Create a New Post</h2>
@@ -105,6 +108,7 @@ import api from '../services/api.js';
 import PostItem from '../components/Posts/PostItem.vue';
 import BaseCard from '../components/UI/BaseCard.vue';
 import BaseButton from '../components/UI/BaseButton.vue';
+import SearchBar from '../components/UI/SearchBar.vue';
 
 // --- 1. STATE ---
 const posts = ref([]);

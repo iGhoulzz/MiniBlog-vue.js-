@@ -13,7 +13,7 @@ class Post extends Model
 
     protected $fillable = ['content', 'user_id'];
 
-    protected $appends = ['image_url','reaction_summary','reaction_count'];
+    protected $appends = ['image_url','reaction_summary','reaction_count', 'user_reaction'];
 
 
 
@@ -35,6 +35,21 @@ class Post extends Model
         }
 
         return 0;
+    }
+
+    public function getUserReactionAttribute()
+    {
+        $userId = auth('sanctum')->id();
+        
+        if (!$userId) {
+            return null;
+        }
+
+        if ($this->relationLoaded('reactions')) {
+            return $this->reactions->where('user_id', $userId)->first()?->type;
+        }
+
+        return $this->reactions()->where('user_id', $userId)->value('type');
     }
 
     public function getImageUrlAttribute()
