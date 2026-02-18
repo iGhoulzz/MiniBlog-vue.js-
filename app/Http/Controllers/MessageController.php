@@ -21,7 +21,7 @@ class MessageController extends Controller
             'conversation_id' => $conversation->id,
             'user_id' => $request->user()->id,
         ]);
-        $message->load('user', 'readByUsers');
+        $message->load(['user.media', 'readByUsers']);
         broadcast(new MessageSent($message))->toOthers();
         return response()->json($message, 201);
 
@@ -29,6 +29,8 @@ class MessageController extends Controller
 
     public function destroy(Message $message)
     {
+        $this->authorize('view', $message->conversation);
+
         // Don't actually delete the record, just hide it for this user
         // We use 'syncWithoutDetaching' to add it to the hidden list
         // which prevents duplicates if they try to delete it twice

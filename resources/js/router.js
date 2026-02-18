@@ -8,6 +8,7 @@ import EditPost from './pages/EditPost.vue';
 import UserProfile from './pages/UserProfile.vue';
 import EditProfile from './pages/EditProfile.vue';
 import Messages from './pages/Messages.vue';
+import SearchResults from './pages/SearchResults.vue';
 
 import AuthLayout from './layouts/AuthLayout.vue';
 import DefaultLayout from './layouts/DefaultLayout.vue';
@@ -23,6 +24,7 @@ const routes = [
       { path: 'users/:id', name: 'UserProfile', component: UserProfile, meta: { requiresAuth: true } },
       { path: 'profile/edit', name: 'EditProfile', component: EditProfile, meta: { requiresAuth: true } },
       { path: 'messages', name: 'Messages', component: Messages, meta: { requiresAuth: true } },
+      { path: 'search', name: 'SearchResults', component: SearchResults, meta: { requiresAuth: true } },
     ],
   },
   {

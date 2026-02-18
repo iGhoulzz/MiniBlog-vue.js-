@@ -43,6 +43,16 @@ class Message extends Model
         });
     }
 
+    /**
+     * Scope: exclude messages that the given user has hidden.
+     */
+    public function scopeVisibleTo($query, User $user)
+    {
+        return $query->whereDoesntHave('hiddenByUsers', function ($q) use ($user) {
+            $q->where('user_id', $user->id);
+        });
+    }
+
     public function getReadByAttribute(): array
     {
         $this->loadMissing('readByUsers');

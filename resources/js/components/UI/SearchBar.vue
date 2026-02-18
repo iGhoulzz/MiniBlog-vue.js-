@@ -70,7 +70,7 @@
               <p class="text-[11px] font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">People</p>
             </div>
             <ul>
-              <li v-for="user in results.users" :key="'user-' + user.id">
+              <li v-for="user in results.users.slice(0, 5)" :key="'user-' + user.id">
                 <button
                   type="button"
                   class="w-full px-4 py-3 flex items-center gap-3 hover:bg-gray-50 dark:hover:bg-gray-700/50 transition text-left"
@@ -131,6 +131,23 @@
             </ul>
           </div>
 
+          <!-- View All Results Button -->
+          <div
+            v-if="(results.users_total > 5 || results.posts_total > 5)"
+            class="border-t border-gray-100 dark:border-gray-700"
+          >
+            <button
+              type="button"
+              class="w-full px-4 py-3 flex items-center justify-center gap-2 text-sm font-medium text-blue-600 dark:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/20 transition"
+              @click="handleShowMore()"
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+              </svg>
+              View All Results
+            </button>
+          </div>
+
           <!-- No Results -->
           <div v-if="hasSearched && !results.users?.length && !results.posts?.length" class="px-4 py-8 text-center">
             <svg xmlns="http://www.w3.org/2000/svg" class="w-10 h-10 mx-auto text-gray-300 dark:text-gray-600 mb-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -147,7 +164,7 @@
               <p class="text-[11px] font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">Messages</p>
             </div>
             <ul class="max-h-80 overflow-y-auto">
-              <li v-for="message in results.messages" :key="'msg-' + message.id">
+              <li v-for="message in results.messages.slice(0, 5)" :key="'msg-' + message.id">
                 <button
                   type="button"
                   class="w-full px-4 py-3 flex items-center gap-3 hover:bg-gray-50 dark:hover:bg-gray-700/50 transition text-left"
@@ -175,6 +192,23 @@
                 </button>
               </li>
             </ul>
+          </div>
+
+          <!-- View All Messages Button -->
+          <div
+            v-if="results.messages_total > 5"
+            class="border-t border-gray-100 dark:border-gray-700"
+          >
+            <button
+              type="button"
+              class="w-full px-4 py-3 flex items-center justify-center gap-2 text-sm font-medium text-blue-600 dark:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/20 transition"
+              @click="handleShowMore('messages')"
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+              </svg>
+              View All Messages
+            </button>
           </div>
 
           <!-- No Results -->
@@ -301,6 +335,16 @@ function handleMessageClick(message) {
   if (message.conversation_id) {
     chatStore.openConversation(message.conversation_id);
   }
+}
+
+function handleShowMore(type) {
+  const routeQuery = { q: query.value };
+  if (type) routeQuery.type = type;
+  isFocused.value = false;
+  query.value = '';
+  results.value = {};
+  hasSearched.value = false;
+  router.push({ name: 'SearchResults', query: routeQuery });
 }
 
 function formatTimestamp(value) {

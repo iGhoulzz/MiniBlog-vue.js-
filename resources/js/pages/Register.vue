@@ -68,67 +68,58 @@
 <script setup>
 import { reactive, ref } from 'vue';
 import { useRouter } from 'vue-router';
-import { useAuthStore } from '../stores/auth';
+// import { useAuthStore } from '../stores/auth'; // Not strictly needed unless checking auth status
+import { useNotificationStore } from '../stores/notification';
 import api from '../services/api.js';
 import BaseCard from '../components/UI/BaseCard.vue';
 import BaseInput from '../components/UI/BaseInput.vue';
 import BaseButton from '../components/UI/BaseButton.vue';
 
 // --- 1. STATE ---
-// Create a reactive object for our form.
-// v-model links the inputs directly to these properties.
 const form = reactive({
   name: '',
   email: '',
   password: '',
-  password_confirmation: '' // Must match the backend validation rule
+  password_confirmation: ''
 });
 
-// This gives us access to the Vue router instance.
+const errors = ref({});
+const errorMessage = ref('');
+const isLoading = ref(false);
+
 const router = useRouter();
 const notificationStore = useNotificationStore();
 
-
 // --- 2. BEHAVIOR ---
-// This is the function that runs when the form is submitted.
 const handleRegister = async () => {
+  errors.value = {};
+  errorMessage.value = '';
+  isLoading.value = true;
+
   try {
-    // --- 3. BACKEND CONNECTION (Step A) ---
-    // Just like login, we must get the Sanctum CSRF cookie first.
+    // get csrf cookie
     await api.get('/sanctum/csrf-cookie');
 
-    // --- 4. BACKEND CONNECTION (Step B) ---
-    // Send a POST request to the API route we built.
-    const response = await api.post('/register', form);
+    // register
+    await api.post('/register', form);
 
-    // --- 5. SUCCESS ---
-    // If registration is successful, the backend sends a 201 response.
-    // Show success notification and redirect the user to the login page.
     notificationStore.showNotification({
       message: 'Registration successful! Please log in.',
       type: 'success'
     });
-    router.push('/auth/login');
+    router.push({ name: 'Login' }); // Use named route if possible, or '/auth/login'
 
   } catch (error) {
-    // --- 6. FAILURE ---
-    // If the backend returns a 422 (Validation Error)
     if (error.response && error.response.status === 422) {
-      // Laravel sends a JSON object of all validation errors.
-      const errors = error.response.data.errors;
-      const errorMessages = Object.values(errors).flat().join('. ');
-      notificationStore.showNotification({
-        message: errorMessages,
-        type: 'error'
-      });
+      errors.value = error.response.data.errors;
+      // Also set a general error message if needed
+      errorMessage.value = "Please correct the errors below.";
     } else {
-      // Handle other unexpected errors
-      notificationStore.showNotification({
-        message: 'An unexpected error occurred. Please try again.',
-        type: 'error'
-      });
+      errorMessage.value = 'An unexpected error occurred. Please try again.';
       console.error(error);
     }
+  } finally {
+    isLoading.value = false;
   }
 };
 </script>

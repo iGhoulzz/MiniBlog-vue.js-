@@ -64,7 +64,7 @@ protected $appends = ['avatar_url'];
      */
     public function getAvatarUrlAttribute()
     {
-        $media = $this->media->where('collection', 'avatar')->first();
+        $media = $this->media()->where('collection', 'avatar')->first();
         if ($media) {
             return Storage::disk($media->disk)->url($media->file_path);
         }

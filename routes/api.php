@@ -55,6 +55,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::patch('/notifications/read-all', [NotificationController::class, 'markAllAsRead']);
 
     Route::get('/search', [SearchController::class, 'search']);
+    Route::get('/search/all', [SearchController::class, 'fullSearch']);
     Route::get('/search/messages', [SearchController::class, 'searchMessages']);
 
 });
